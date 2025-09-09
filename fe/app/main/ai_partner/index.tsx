@@ -1,4 +1,4 @@
-import MessagePart from '@/components/ai-partner/MessagePart';
+import MessagePart from '@/components/main_screen/ai-partner/MessagePart';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import React from 'react';
 import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from 'react-native';

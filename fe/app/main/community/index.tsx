@@ -1,13 +1,13 @@
-import Board from "@/components/community/Board";
-import ChooseTag from "@/components/community/ChooseTag";
-import CommunityPost from '@/components/community/CommunityPost';
-import SearchBox from "@/components/community/SearchBox";
+import Board from "@/components/main_screen/community/Board";
+import ChooseTag from "@/components/main_screen/community/ChooseTag";
+import CommunityPost from '@/components/main_screen/community/CommunityPost';
+import SearchBox from "@/components/main_screen/community/SearchBox";
 import { DUMMY_POSTS } from '@/constants/communityContents';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { Post } from '@/types';
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { router } from "expo-router";
+import { useRouter } from "expo-router";
 import React, { useState } from 'react';
 import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
@@ -18,6 +18,8 @@ export default function CommunityScreen() {
   const filteredPosts = activeTag === "전체"
     ? DUMMY_POSTS
     : DUMMY_POSTS.filter(post => post.tag === activeTag);
+
+  const router = useRouter();
 
   return (
     <SafeAreaView style={styles.container}>
@@ -42,7 +44,7 @@ export default function CommunityScreen() {
         ListHeaderComponent={<Board activeTag={activeTag} />}
       />
 
-      <TouchableOpacity style={styles.post} onPress={() => router.push("/postCreation")}>
+      <TouchableOpacity style={styles.post} onPress={() => router.push('/main/community/write_post')}>
         <FontAwesome name="pencil" size={30} color={COLORS.white} />
       </TouchableOpacity>
     </SafeAreaView>
@@ -74,7 +76,7 @@ const styles = StyleSheet.create({
   },
   post: {
     position: 'absolute',
-    bottom: SIZES.small,
+    bottom: SIZES.large,
     right: SIZES.small,
     width: 60,
     height: 60,

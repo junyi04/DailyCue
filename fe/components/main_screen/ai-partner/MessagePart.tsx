@@ -131,7 +131,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     paddingHorizontal: SIZES.small,
     alignItems: 'flex-end',
-    paddingVertical: 10,
+    paddingBottom: 20,
+    paddingTop: 10,
   },
   textInput: {
     flex: 1,

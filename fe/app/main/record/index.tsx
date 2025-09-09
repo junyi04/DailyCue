@@ -1,13 +1,19 @@
+import EmotionRecord from "@/components/main_screen/journal/EmotionRecord";
 import { COLORS } from "@/constants/theme";
+import { useRecords } from "@/hooks/useRecords";
 import { router } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-export default function PostCreation() {
+
+export default function RecordScreen() {
+  const { addRecord } = useRecords();
+
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => router.push("/main/community")}>
+      <EmotionRecord onRecordAdded={addRecord} />
+      <TouchableOpacity style={styles.closeButton} onPress={() => router.push('/main')}>
         <Text style={styles.closeText}>나가기</Text>
-        <Text>게시글 작성할 수 있는 화면</Text>
+    
       </TouchableOpacity>
     </View>
   );

@@ -1,7 +1,7 @@
 // 홈 화면
-import Button from '@/components/journal/Button';
-import HeadScreen from '@/components/journal/HeadScreen';
-import SavedRecords from '@/components/journal/SavedReords';
+import Button from '@/components/main_screen/journal/Button';
+import HeadScreen from '@/components/main_screen/journal/HeadScreen';
+import SavedRecords from '@/components/main_screen/journal/SavedReords';
 import { COLORS } from '@/constants/theme';
 import { STORAGE_KEY } from '@/hooks/useRecords';
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -49,7 +49,7 @@ export default function JournalScreen() {
       <View style={styles.body}>
         <Button count={records.length}/>
         <SavedRecords 
-          records={records} // records 배열 형식으로 데이터를 전해줌. 
+          records={records} // records 배열 형식으로 데이터를 전해줌.
         />
       </View>
       

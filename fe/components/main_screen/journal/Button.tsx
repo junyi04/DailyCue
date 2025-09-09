@@ -16,7 +16,7 @@ const Button: React.FC<ButtonProps> = ({ count }) => {
   return (
     <TouchableOpacity
       style={styles.button}
-      onPress={() => router.push('/recording')}>
+      onPress={() => router.push('/main/record')}>
       
       <View style={{ flexDirection: 'column' }}>
         <Text style={styles.leftTopContainer}>{currentDate}</Text>

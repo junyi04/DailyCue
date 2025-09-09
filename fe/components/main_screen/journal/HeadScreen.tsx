@@ -14,14 +14,14 @@ const HeadScreen = () => {
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
         <Text style={styles.text1}>DailyCue</Text>
-        <TouchableOpacity style={styles.hamburger} onPress={() => navigation.openDrawer()}>
+        <TouchableOpacity style={styles.hamburger}>
           <Ionicons name="menu" size={35} color={COLORS.darkBlueGray} />
         </TouchableOpacity>
       </View>
       <View style={styles.body}>
         <View style={styles.leftBody}>
           <Text style={styles.text2}>{`데일리큐로\n기록하고\n서로 공유해요!`}</Text>
-          <TouchableOpacity style={styles.goChat} onPress={() => router.push('/main/ai-partner')}>
+          <TouchableOpacity style={styles.goChat} onPress={() => router.push('/main/ai_partner')}>
             <Ionicons name="chatbubbles-outline" size={SIZES.medium} color={COLORS.secondary} />
             <Text style={styles.text3}>ai 채팅가기</Text>
           </TouchableOpacity>

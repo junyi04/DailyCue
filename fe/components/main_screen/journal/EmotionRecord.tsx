@@ -38,7 +38,7 @@ const EmotionRecord: React.FC<EmotionRecordProps> = ({ onRecordAdded }) => {
     setStressLevel(5);
     setText('');
 
-    router.push('/main/journal');
+    router.push('/main');
   };
 
   return (
