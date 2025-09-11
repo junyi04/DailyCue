@@ -1,4 +1,6 @@
-import { COLORS } from "@/constants/theme";
+import ChooseTag from "@/components/main_screen/community/write_post/ChooseTag";
+import WriteBox from "@/components/main_screen/community/write_post/WriteBox";
+import { COLORS, SIZES } from "@/constants/theme";
 import { useRouter } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -7,10 +9,20 @@ export default function WritePostScreen() {
 
   return (
     <View style={styles.container}>
-      <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-        <Text style={styles.closeText}>나가기</Text>
-        <Text>게시글 작성할 수 있는 화면</Text>
-      </TouchableOpacity>
+      <View style={{ paddingTop: 80, backgroundColor: COLORS.secondary }}>
+        <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
+          <Text style={styles.text}>나가기</Text>
+        </TouchableOpacity>
+        <TouchableOpacity style={styles.saveButton} onPress={() => router.back()}>
+          <Text style={styles.text}>저장</Text>
+        </TouchableOpacity>
+      </View>
+      <View>
+        <ChooseTag />
+      </View>
+      <View style={{ flex: 1 }}>
+        <WriteBox />
+      </View>
     </View>
   );
 }
@@ -19,17 +31,21 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: COLORS.pageBackground,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   closeButton: {
     position: 'absolute',
     top: 40,
-    left: 20,
+    left: SIZES.large,
     zIndex: 10,
   },
-  closeText: {
+  text: {
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  saveButton: {
+    position: 'absolute',
+    top: 40,
+    right: SIZES.large,
+    zIndex: 10,
   },
 })
