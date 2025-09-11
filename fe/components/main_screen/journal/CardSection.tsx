@@ -18,8 +18,8 @@ const CardSection: React.FC<CardSectionProps> = ({ records, initialIndex }) => {
   const renderItem = ({ item }: { item: Record }) => (
     <View style={styles.card}>
       <View style={styles.stressTextContainer}>
-        {item.stress !== undefined &&
-          <Text style={styles.stressText}>{item.stress}</Text>
+        {item.emoji !== undefined &&
+          <Text style={styles.stressText}>{item.emoji}</Text>
         }
       </View>
       <View style={styles.contentContainer}>
@@ -48,7 +48,7 @@ const CardSection: React.FC<CardSectionProps> = ({ records, initialIndex }) => {
           parallaxScrollingOffset: 130,
         }}
       />
-      <TouchableOpacity style={styles.closeButton} onPress={() => router.push("/main/journal")}>
+      <TouchableOpacity style={styles.closeButton} onPress={() => router.push("/main")}>
         <Text style={styles.closeText}>나가기</Text>
       </TouchableOpacity>
     </View>

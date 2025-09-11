@@ -1,7 +1,5 @@
-// SavedRecords.tsx
-
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { Record } from '@/types'; // (types.ts 파일에 Record 타입이 정의되어 있어야 함)
+import { Record } from '@/types';
 import { isSameDay } from 'date-fns';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
@@ -33,7 +31,7 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records }) => {
           <View style={styles.recordItem}>
             <Text style={styles.recordContent}>{recordForSelectedDay.content}</Text>
             <Text style={styles.recordTitle}>
-              {recordForSelectedDay.stress ? `나의 감정 지수: ${recordForSelectedDay.stress}` : '기록'}
+              {recordForSelectedDay.emoji ? `나의 감정: ${recordForSelectedDay.emoji}` : '기록'}
             </Text>
           </View>
         ) : (

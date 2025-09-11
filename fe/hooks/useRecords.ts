@@ -37,15 +37,15 @@ export function useRecords() {
     saveRecords();
   }, [records]);
 
-  const addRecord = (newRecord : { content: string; stress: number; createdAt: string; }) => {
+  const addRecord = (newRecord: Omit<Record, 'id'>) => {
     setRecords(prev => {
-      const newEntry = {
+      const newEntry: Record = {
         ...newRecord,
         id: Date.now().toString(),
       };
       return [newEntry, ...prev];
     });
-  }
+  };
 
   // 모든 기록을 삭제하는 함수
   const clearRecords = async () => {

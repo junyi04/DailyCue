@@ -7,17 +7,36 @@ import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { Post } from '@/types';
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRouter } from "expo-router";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from 'react';
 import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 
 export default function CommunityScreen() {
+  const { post } = useLocalSearchParams<{ post?: string }>();
+  const parsedPost: Post | null = post ? JSON.parse(post) : null;
+  
+  // 기존 post + 새 글 합치기
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
+  const posts = parsedPost ? [parsedPost, ...DUMMY_POSTS] : DUMMY_POSTS;
 
   const filteredPosts = activeTag === "전체"
-    ? DUMMY_POSTS
-    : DUMMY_POSTS.filter(post => post.tag === activeTag);
+    ? posts
+    : posts.filter(post => post.tag === activeTag);
+
+
+  // 백엔드 연결 시 API 호출 DB에 저장된 글 목록 불럭오기.
+  // const [posts, setPosts] = useState<Post[]>([]);
+
+  // useEffect(() => {
+  //   const fetchPosts = async () => {
+  //     const res = await fetch("http://localhost:8080/posts");
+  //     const data = await res.json();
+  //     setPosts(data);
+  //   };
+  //   fetchPosts();
+  // }, []);
+
 
   const router = useRouter();
 

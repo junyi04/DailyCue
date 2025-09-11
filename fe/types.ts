@@ -18,7 +18,8 @@ export interface Message {
 // 기록
 export interface Record {
   id: string;
+  emoji: '😍' | '😆' | '😯' | '😐' | '😭' | '😡',
+  title: string;
   content: string;
-  stress: number;
   createdAt: string;
-}
+} 

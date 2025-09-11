@@ -1,23 +1,42 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { Post } from "@/types";
+import { useState } from "react";
 import { StyleSheet, View, Text, TouchableOpacity } from "react-native";
 
-const ChooseTag = () => {
+
+interface ChooseTagProps {
+  selectedTag: Post['tag'] | null;
+  onSelectTag: (tag: Post['tag']) => void;
+}
+const ChooseTag:React.FC<ChooseTagProps> = ({ selectedTag, onSelectTag }) => {
+
+  const tags: Post['tag'][] = ['공유해요', '공감원해요', '함께해요', '고수찾아요'];
+
   return (
     <View style={styles.container}>
-      <Text style={{ ...FONTS.h3, fontWeight: 'bold' }}>게시판 선택</Text>
+      <Text style={{ ...FONTS.h3, fontWeight: 'bold' }} >게시판 선택</Text>
       <View style={styles.tagContainer}>
-        <TouchableOpacity style={styles.tag}>
-          <Text style={styles.tagText}>공유해요</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tag}>
-          <Text style={styles.tagText}>공감원해요</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tag}>
-          <Text style={styles.tagText}>함께해요</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.tag}>
-          <Text style={styles.tagText}>고수찾아요</Text>
-        </TouchableOpacity>
+        {tags.map(tag => {
+          const isActive = tag === selectedTag;
+          return (
+            <TouchableOpacity
+              key={tag}
+              style={[
+                styles.tag,
+                isActive && { borderColor: COLORS.secondary, borderWidth: 2 }
+              ]}
+              onPress={() => onSelectTag(tag)}
+            >
+              <Text style={[
+                styles.tagText,
+                isActive && { color: COLORS.secondary, fontWeight: 'bold' }
+                ]}
+              >
+                {tag}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
       </View>
     </View>
   );
@@ -26,7 +45,7 @@ const ChooseTag = () => {
 const styles = StyleSheet.create({
   container: {
     justifyContent: 'center',
-    padding: SIZES.large,
+    padding: SIZES.mega,
   },
   tagContainer: {
     flexDirection: 'row',

@@ -9,17 +9,16 @@ interface WriteBoxProps {
   setContent: (c: string) => void;
 }
 
-const WriteBox: React.FC<WriteBoxProps> = ({ title, setTitle, content, setContent }) => {
+const WriteEmotion: React.FC<WriteBoxProps> = ({ title, setTitle, content, setContent }) => {
   return (
     <View style={styles.container}>
-      <Text style={{ ...FONTS.h3, fontWeight: 'bold' }}>글 작성</Text>
       <View style={styles.postContainer}>
         <View style={styles.titleContainer}>
           <TextInput 
             style={styles.title}
             value={title}
             onChangeText={setTitle}
-            placeholder="제목을 입력해주세요. (최대 20자)"
+            placeholder="제목을 입력해주세요."
             placeholderTextColor={COLORS.gray}
             
           />
@@ -43,7 +42,16 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     justifyContent: 'flex-start',
-    paddingHorizontal: SIZES.mega,
+    paddingHorizontal: SIZES.small,
+    marginHorizontal: SIZES.mega,
+    borderTopLeftRadius: SIZES.large,
+    borderTopRightRadius: SIZES.large,
+    backgroundColor: COLORS.white,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   postContainer: {
     flex: 1,
@@ -72,4 +80,4 @@ const styles = StyleSheet.create({
   },
 })
 
-export default WriteBox;
+export default WriteEmotion;
