@@ -63,7 +63,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
   },
   head: {
-    height: 350,
+    height: 335,
     justifyContent: 'center',
   },
   body: {

@@ -1,39 +1,38 @@
-// CalenderStrip으로 넘어갈 컴포넌트 -> 일~토로 7일씩 보이도록 설정
+// WeekView.tsx (수정)
+
 import { COLORS } from "@/constants/theme";
-import { addDays, format, isSameMonth } from "date-fns";
+import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface WeekViewProps {
-  weekStartDate: Date;
+  days: (Date | null)[]; // 7개의 날짜 또는 null을 받음
   selectedDate: Date;
   onSelectDate: (date: Date) => void;
   containerWidth: number;
-  activeMonth: Date;
 }
 
 const WeekView: React.FC<WeekViewProps> = React.memo(
-  ({ weekStartDate, selectedDate, onSelectDate, containerWidth, activeMonth }) => {
-    const weekDays = Array.from({ length: 7 }).map((_, i) => addDays(weekStartDate, i));
+  ({ days, selectedDate, onSelectDate, containerWidth }) => {
+    const dayWidth = containerWidth / 7;
 
     return (
       <View style={[styles.weekContainer, { width: containerWidth }]}>
-        {weekDays.map((day) => {
+        {days.map((day, index) => {
+          // day가 null이면 빈 칸을 렌더링
+          if (!day) {
+            return <View style={{ width: dayWidth }} key={`empty-${index}`} />;
+          }
+
           const dayString = format(day, "yyyy-MM-dd");
           const selectedDateString = format(selectedDate, "yyyy-MM-dd");
           const isSelected = dayString === selectedDateString;
 
-          const isInActiveMonth = isSameMonth(day, activeMonth);
-
-          if (!isInActiveMonth) {
-            return <View style={styles.emptyDayContainer} key={dayString} />;
-          }
-
           return (
             <TouchableOpacity
               key={dayString}
-              style={styles.dayContainer}
+              style={[styles.dayContainer, { width: dayWidth }]}
               onPress={() => onSelectDate(day)}
             >
               <Text style={[styles.dayText, isSelected && styles.selectedText]}>
@@ -52,22 +51,19 @@ const WeekView: React.FC<WeekViewProps> = React.memo(
   }
 );
 
+// ... styles (기존과 동일)
 const styles = StyleSheet.create({
   weekContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 7,
-  },
-  emptyDayContainer: {
-    flex: 1,
+    paddingVertical: 5,
   },
   dayContainer: {
-    flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
   dayText: {
-    fontSize: 14,
+    fontSize: 12,
     color: COLORS.darkGray,
     marginBottom: 4,
   },
@@ -76,17 +72,17 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
   },
   dateCircle: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     justifyContent: 'center',
     alignItems: 'center',
   },
   selectedCircle: {
-    backgroundColor: COLORS.secondary,
-    borderRadius: 16,
+    backgroundColor: COLORS.darkGray,
+    borderRadius: 15,
   },
   dateText: {
-    fontSize: 14,
+    fontSize: 15,
     color: COLORS.darkGray,
   },
   selectedDateText: {
@@ -94,5 +90,6 @@ const styles = StyleSheet.create({
     color: COLORS.white,
   },
 });
+
 
 export default WeekView;

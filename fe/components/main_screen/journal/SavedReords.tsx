@@ -3,7 +3,7 @@ import { Record } from '@/types';
 import { isSameDay } from 'date-fns';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, View } from "react-native";
-import CalendarStrip from "./CalenderStrip";
+import MonthlyCalendar from "./calendar/MonthlyCalendar";
 
 interface SavedRecordsProps {
   records: Record[];
@@ -18,11 +18,14 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records }) => {
   );
 
   return (
-    // 2. 부모 컨테이너에 마진 적용 (예: marginHorizontal: 25)
+    // 2. 부모 컨테이너에 마진 적용
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      <CalendarStrip
+      {/* <CalendarStrip
         selectedDate={selectedDate}
         onDateChange={setSelectedDate}
+      /> */}
+      <MonthlyCalendar
+        onDateSelect={setSelectedDate}
       />
 
       {/* 3. 단일 기록 표시 영역 */}
@@ -47,7 +50,7 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    marginHorizontal: 25, // 부모에서 여백 설정
+    marginHorizontal: 25,
     paddingHorizontal: 10,
     backgroundColor: COLORS.white,
     borderTopLeftRadius: SIZES.large,

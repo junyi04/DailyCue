@@ -20,11 +20,14 @@ const HeadScreen = () => {
       </View>
       <View style={styles.body}>
         <View style={styles.leftBody}>
-          <Text style={styles.text2}>{`데일리큐로\n기록하고\n서로 공유해요!`}</Text>
-          <TouchableOpacity style={styles.goChat} onPress={() => router.push('/main/ai_partner')}>
-            <Ionicons name="chatbubbles-outline" size={SIZES.medium} color={COLORS.secondary} />
-            <Text style={styles.text3}>ai 채팅가기</Text>
-          </TouchableOpacity>
+          <Text style={[styles.text2, { lineHeight: 45 }]}>
+            데일리큐로{'\n'}기록하고{'\n'}서로 공유해요!
+          </Text>
+
+          {/* <TouchableOpacity style={styles.goChat} onPress={() => router.push('/main/record')}>
+            <Ionicons name="receipt-outline" size={SIZES.medium} color={COLORS.secondary} />
+            <Text style={styles.text3}>기록하기</Text>
+          </TouchableOpacity> */}
         </View>
         <View style={styles.rightBody}>
           <Image
@@ -47,7 +50,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   text1: {
-    ...FONTS.h2,
+    fontSize: 22,
     fontWeight: 'bold',
     color: COLORS.darkBlueGray,
   },
@@ -69,7 +72,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   text2: {
-    fontSize: 30,
+    fontSize: 27,
     fontWeight: '500',
     color: COLORS.white,
   },
