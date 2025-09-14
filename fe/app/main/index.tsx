@@ -3,7 +3,7 @@ import Button from '@/components/main_screen/journal/Button';
 import HeadScreen from '@/components/main_screen/journal/HeadScreen';
 import SavedRecords from '@/components/main_screen/journal/SavedReords';
 import { COLORS } from '@/constants/theme';
-import { STORAGE_KEY } from '@/hooks/useRecords';
+import { STORAGE_KEY, useRecords } from '@/hooks/useRecords';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';

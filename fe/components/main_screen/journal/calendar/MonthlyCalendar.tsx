@@ -16,6 +16,7 @@ import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
 import WeekNavigator from './WeekNavigator';
 import WeekView from './WeekView';
+import { SIZES } from '@/constants/theme';
 
 // 달력의 한 '줄'에 대한 정보를 담는 타입
 interface CalendarRow {
@@ -35,7 +36,7 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // --- 👇 달력 데이터 생성 로직 전면 재작성 ---
+  // --- 달력 데이터 생성 로직 ---
   const { calendarRows, initialIndex } = useMemo(() => {
     const rows: CalendarRow[] = [];
     const today = new Date();
@@ -50,7 +51,7 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       
       const firstDayOfMonth = startOfMonth(currentMonth);
       const lastDayOfMonth = endOfMonth(currentMonth);
-      const firstDayWeekday = getDay(firstDayOfMonth); // 0(일요일) ~ 6(토요일)
+      const firstDayWeekday = getDay(firstDayOfMonth);
       const lastDate = getDate(lastDayOfMonth);
 
       // 해당 월의 날짜들을 배열로 만듦 (앞에 빈 칸 포함)
@@ -151,6 +152,7 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    paddingVertical: SIZES.small,
   },
 });
 

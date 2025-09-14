@@ -20,10 +20,7 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records }) => {
   return (
     // 2. 부모 컨테이너에 마진 적용
     <ScrollView style={styles.container} showsVerticalScrollIndicator={false}>
-      {/* <CalendarStrip
-        selectedDate={selectedDate}
-        onDateChange={setSelectedDate}
-      /> */}
+
       <MonthlyCalendar
         onDateSelect={setSelectedDate}
       />

@@ -3,6 +3,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { COLORS, FONTS } from '@/constants/theme';
+import { FontAwesome6 } from '@expo/vector-icons';
 
 interface WeekNavigatorProps {
   year: number;
@@ -19,11 +20,11 @@ const WeekNavigator: React.FC<WeekNavigatorProps> = ({ year, month, weekOfMonth,
   return (
     <View style={styles.container}>
       <TouchableOpacity onPress={onPrev} style={styles.arrowButton}>
-        <Text style={styles.arrowText}>{'<'}</Text>
+        <Text style={styles.arrowText}><FontAwesome6 name='angle-left' size={15} /></Text>
       </TouchableOpacity>
       <Text style={styles.dateText}>{`${monthText} ${weekOfMonth}주차`}</Text>
       <TouchableOpacity onPress={onNext} style={styles.arrowButton}>
-        <Text style={styles.arrowText}>{'>'}</Text>
+        <Text style={styles.arrowText}><FontAwesome6 name='angle-right' size={15} /></Text>
       </TouchableOpacity>
     </View>
   );
@@ -36,7 +37,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
-    marginHorizontal: 16,
   },
   arrowButton: {
     paddingHorizontal: 20,
