@@ -1,8 +1,7 @@
-import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, ScrollView, Image } from "react-native";
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { LinearGradient } from 'expo-linear-gradient';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
+import React from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Setting() {
   const handleMenuPress = (menu: string) => {
@@ -10,8 +9,12 @@ export default function Setting() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
-      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}>
+    <SafeAreaView style={styles.container} edges={['top']}>
+      <ScrollView style={styles.scrollView} showsVerticalScrollIndicator={false}
+      contentContainerStyle={{
+        paddingHorizontal: SIZES.medium,
+        paddingBottom: SIZES.medium,
+      }}>
         {/* 프로필 섹션 */}
         <View style={styles.profileSection}>
           <View style={styles.profileImage}>
@@ -56,7 +59,7 @@ export default function Setting() {
           </View>
         </View>
 
-     
+
 
         {/* 추가 메뉴 섹션 */}
         <View style={styles.cardSection}>
@@ -104,7 +107,6 @@ const styles = StyleSheet.create({
   },
   scrollView: {
     flex: 1,
-    paddingHorizontal: SIZES.medium,
   },
   profileSection: {
     alignItems: 'center',

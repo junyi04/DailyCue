@@ -3,24 +3,23 @@ import { FontAwesome6 } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
-interface WeekNavigatorProps {
+interface YearNavigatorProps {
   year: number;
-  month: number; // 0-11
-  weekOfMonth: number;
   onPrev: () => void;
   onNext: () => void;
+  onYearChange: (newYear: number) => void;
 }
 
-const WeekNavigator: React.FC<WeekNavigatorProps> = ({ year, month, weekOfMonth, onPrev, onNext }) => {
-  const monthText = `${month + 1}월`;
-
+const YearNavigator: React.FC<YearNavigatorProps> = ({ year, onPrev, onNext, onYearChange }) => {
   return (
     <View style={styles.container}>
-      <TouchableOpacity onPress={onPrev} style={styles.arrowButton}>
+      <TouchableOpacity onPress={() => onYearChange(year - 1)} style={styles.arrowButton}>
         <Text style={styles.arrowText}><FontAwesome6 name='angle-left' size={15} /></Text>
       </TouchableOpacity>
-      <Text style={styles.dateText}>{`${monthText} ${weekOfMonth}주차`}</Text>
-      <TouchableOpacity onPress={onNext} style={styles.arrowButton}>
+
+      <Text style={styles.dateText}>{`${year}년`}</Text>
+      
+      <TouchableOpacity onPress={() => onYearChange(year + 1)} style={styles.arrowButton}>
         <Text style={styles.arrowText}><FontAwesome6 name='angle-right' size={15} /></Text>
       </TouchableOpacity>
     </View>
@@ -32,7 +31,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 10,
+    paddingVertical: 30,
   },
   arrowButton: {
     paddingHorizontal: 20,
@@ -50,4 +49,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default WeekNavigator;
+export default YearNavigator;

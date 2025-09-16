@@ -1,6 +1,5 @@
 // 기록 저장 버튼 + 하얀 배경 뷰
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
 import React from "react";
