@@ -12,13 +12,15 @@
   },
   "dependencies": {
     "@expo/vector-icons": "^14.1.0",
-    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-async-storage/async-storage": "^2.1.2",
     "@react-native-community/slider": "4.5.6",
     "@react-native-picker/picker": "^2.11.1",
+    "@react-native-seoul/kakao-login": "^5.4.1",
     "@react-navigation/bottom-tabs": "^7.4.6",
     "@react-navigation/drawer": "^7.5.8",
     "@react-navigation/elements": "^2.3.8",
     "@react-navigation/native": "^7.1.17",
+    "@supabase/supabase-js": "^2.57.4",
     "date-fns": "^4.1.0",
     "expo": "^54.0.2",
     "expo-blur": "~14.1.5",
@@ -51,7 +53,7 @@
     "react-native-safe-area-context": "^5.4.0",
     "react-native-screens": "~4.11.1",
     "react-native-slider": "^0.11.0",
-    "react-native-svg": "15.11.2",
+    "react-native-svg": "^15.11.2",
     "react-native-timeline-flatlist": "^0.8.0",
     "react-native-vector-icons": "^10.3.0",
     "react-native-web": "~0.20.0",
@@ -64,6 +66,7 @@
     "@types/react": "~19.0.10",
     "eslint": "^9.25.0",
     "eslint-config-expo": "~9.2.0",
+    "react-native-svg-transformer": "^1.5.1",
     "typescript": "~5.8.3"
   },
   "private": true

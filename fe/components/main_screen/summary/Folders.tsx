@@ -20,7 +20,7 @@ const Folders: React.FC<FolderProps> = ({ year }) => {
         style={styles.monthFolder}
         onPress={() => handleMonthPress(item)}
       >
-        <Ionicons name="folder-open-sharp" size={130} color={COLORS.secondary} />
+        <Ionicons name="folder-open-sharp" size={100} color={COLORS.secondary} />
       </TouchableOpacity>
       <Text style={styles.monthText}>{`${item + 1}월`}</Text>
     </View>
@@ -45,17 +45,25 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     marginHorizontal: 25,
-    marginTop: 10,
-    borderRadius: SIZES.small,
+    marginTop: SIZES.large,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: SIZES.medium,
+    borderRadius: SIZES.medium,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   monthText: {
     fontSize: 18,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
+    color: "#222",
+    marginBottom: 0,
+    marginTop: 5,
   },
   monthList: {
-    paddingBottom: 280,
+    paddingBottom: 100,
   },
 });
 export default Folders;
