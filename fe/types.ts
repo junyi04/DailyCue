@@ -5,6 +5,9 @@ export interface Post {
   title: string;
   content: string;
   author: string;
+  like: number;
+  comment: number;
+  views: number;
 }
 
 // AI 챗봇 메시지 타입

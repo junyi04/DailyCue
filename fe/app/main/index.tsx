@@ -11,7 +11,8 @@ import { format } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
-import { Modal, SafeAreaView, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 
 export default function JournalScreen() {
@@ -35,7 +36,7 @@ export default function JournalScreen() {
   );
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider style={styles.container}>
       <LinearGradient
         colors={[COLORS.secondary, COLORS.pageBackground]}
         locations={[0.3, 0.7]}
@@ -81,7 +82,7 @@ export default function JournalScreen() {
           )}
         </View>
       </Modal>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 

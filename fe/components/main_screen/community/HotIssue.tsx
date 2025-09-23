@@ -1,6 +1,8 @@
 // 추천 글 + 게시판 컴포넌트
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { Post } from "@/types";
+import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import React from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
@@ -20,13 +22,31 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
         horizontal
         contentContainerStyle={{ paddingBottom: 20 }}
         keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
         renderItem={({ item: post }) => (
-          <TouchableOpacity style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}>
+          <TouchableOpacity
+            style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}
+            onPress={() => router.push("/main/community/read_post")}
+          >
             <View style={styles.tag}>
               <Text style={[styles.tagText, { color: COLORS.gray }]}>{post.tag}</Text>
             </View>
             <Text style={[styles.title, { color: COLORS.darkGray }]}>{post.title}</Text>
-            <Text style={[styles.author, { color: COLORS.gray }]}>by {post.author}</Text>
+
+            <View style={styles.viewContainer}>
+              <View style={styles.statItem}>
+                <EvilIcons name="like" size={15} />
+                <Text style={styles.statText}>{post.like}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <FontAwesome name="commenting-o" size={10} />
+                <Text style={styles.statText}>{post.comment}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="eye-outline" size={14} />
+                <Text style={styles.statText}>{post.views}</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         )}
         ListHeaderComponent={
@@ -89,7 +109,24 @@ const styles = StyleSheet.create({
     fontSize: SIZES.small,
     right: SIZES.large,
     bottom: SIZES.small,
-
-  }
+  },
+  viewContainer: {
+    position: 'absolute',
+    left: SIZES.medium,
+    bottom: SIZES.small,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    ...FONTS.body,
+    fontSize: SIZES.small,
+    color: COLORS.gray,
+    marginLeft: 3,
+  },
 })
 export default HotIssue;

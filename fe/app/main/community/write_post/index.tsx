@@ -26,6 +26,9 @@ export default function WritePostScreen() {
       title,
       content,
       author: "junyi", // 로그인 정보에서 받아오기
+      like: 0,
+      comment: 0,
+      views: 0,
     };
 
     router.push({

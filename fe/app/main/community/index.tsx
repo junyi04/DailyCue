@@ -9,7 +9,8 @@ import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import React, { useState } from 'react';
-import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 
 export default function CommunityScreen() {
@@ -41,7 +42,7 @@ export default function CommunityScreen() {
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider style={styles.container}>
       <LinearGradient
         colors={[COLORS.secondary, COLORS.pageBackground]} 
         locations={[0.3, 0.7]}
@@ -63,10 +64,13 @@ export default function CommunityScreen() {
         ListHeaderComponent={<Board activeTag={activeTag} />}
       />
 
-      <TouchableOpacity style={styles.post} onPress={() => router.push('/main/community/write_post')}>
+      <TouchableOpacity
+        style={styles.post}
+        onPress={() => router.push('/main/community/write_post')}
+      >
         <FontAwesome name="pencil" size={30} color={COLORS.white} />
       </TouchableOpacity>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
 };
 
