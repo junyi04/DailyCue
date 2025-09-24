@@ -38,7 +38,7 @@ export default function LoginScreen() {
 
   return (
     <SafeAreaProvider style={styles.container}>
-      <View style={styles.headerWrap}>
+      {/* <View style={styles.headerWrap}>
         <Image
           source={require('@/assets/images/DailyCue1.png')}
           style={{
@@ -47,7 +47,7 @@ export default function LoginScreen() {
           }}
         />
         <Text style={styles.brand}>하루를 케어하다</Text>
-      </View>
+      </View> */}
 
       {/* 아이디 */}
       <TextInput
