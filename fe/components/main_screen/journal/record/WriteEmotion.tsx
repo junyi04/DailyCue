@@ -43,14 +43,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: SIZES.small,
-    // marginHorizontal: SIZES.mega,
     borderRadius: SIZES.large,
-    // backgroundColor: COLORS.white,
-    // elevation: 2,
-    // shadowColor: '#000',
-    // shadowOffset: { width: 0, height: 1 },
-    // shadowOpacity: 0.05,
-    // shadowRadius: 2,
   },
   postContainer: {
     flex: 1,
@@ -64,10 +57,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: 'bold',
-    padding: 10
+    padding: 10,
   },
   contentContainer: {
-    // KeyBoardAvoidingView에 의해 Content 부분이 글 작성 시 올라감
+    // Content 부분이 글 작성 시 올라감
     flex: 1,
     marginTop: SIZES.small,
   },

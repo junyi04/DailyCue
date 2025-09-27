@@ -14,7 +14,10 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => router.push("/main/community/read_post")}
+      onPress={() => router.push({
+        pathname: "/main/community/read_post",
+        params: { post: JSON.stringify(post) }
+      })}
     >
       <View style={[styles.tag, { backgroundColor: getTagColor(post.tag) }]}>
         <Text style={styles.tagText}>{post.tag}</Text>

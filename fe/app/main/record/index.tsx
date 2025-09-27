@@ -13,7 +13,7 @@ import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOp
 export default function RecordScreen() {
   const { addRecord } = useRecords();
 
-  const [emoji, setEmoji] = useState<Record['emoji'] | null>(null);
+  const [emoji, setEmoji] = useState<Record['emoji'] | null>('😆');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
