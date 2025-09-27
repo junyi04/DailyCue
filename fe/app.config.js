@@ -35,6 +35,7 @@ export default {
     plugins: [
       "expo-router",
       "expo-web-browser",
+      "expo-dev-client",
       [
         "expo-splash-screen",
         {
@@ -51,6 +52,7 @@ export default {
     extra: {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
+      supabaseNativeKey: process.env.EXPO_PUBLIC_SUPABASE_NATIVE_KEY,
       eas: {
         projectId: "f5175e35-e195-40cd-850d-fb8126ca7d70",
       },

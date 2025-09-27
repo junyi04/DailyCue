@@ -10,10 +10,10 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 export default function LoginScreen() {
   // Supabase OAuth 리다이렉션
   const redirectUrl = Linking.createURL("login-callback");
-  console.log("redirectUrl (LoginScreen):", redirectUrl);
 
   const handleKakaoLogin = async () => {
     try {
+      // 카카오 로그인 시 Supabase OAuth 사용
       const { data, error } = await supabase.auth.signInWithOAuth({
         provider: "kakao",
         options: { redirectTo: redirectUrl },
@@ -31,7 +31,8 @@ export default function LoginScreen() {
         console.log("openAuthSessionAsync 결과:", result);
 
         if (result.type === "success") {
-          console.log("카카오 로그인 redirect 성공, 앱으로 돌아감");
+          console.log("카카오 로그인 redirect 성공");
+          router.push("/main");
         } else {
           console.warn("로그인 취소 또는 실패:", result.type);
         }
