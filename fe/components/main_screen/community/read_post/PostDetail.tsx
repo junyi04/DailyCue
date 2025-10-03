@@ -1,5 +1,5 @@
-import { COLORS } from '@/constants/theme';
-import React from 'react';
+import { COLORS, FONTS, SIZES } from '@/constants/theme';
+import React, { useEffect, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -10,66 +10,120 @@ import {
   View
 } from 'react-native';
 
+import { COMMENTS } from '@/constants/commentContents';
 import { getTagColor } from '@/constants/tagColor';
+import { incrementView } from '@/services/postService';
+import { FontAwesome } from '@expo/vector-icons';
+import { formatDistanceToNow } from 'date-fns';
 import { useLocalSearchParams } from 'expo-router';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
+import CommentModal from './CommentModal';
 
-const HeartIcon = ({ filled }: { filled: boolean }) => <Text style={[styles.iconText, { color: filled ? COLORS.primary : COLORS.gray }]}>♥</Text>;
-const CommentIcon = () => <Text style={styles.iconText}>💬</Text>;
 
 const PostDetail = () => {
   const { post } = useLocalSearchParams();
+  console.log("Post param:", post);  
   const parsedPost = post ? JSON.parse(post as string) : null;
+  console.log("Parsed Post:", parsedPost); 
+  
+  const [isLiked, setIsLiked] = useState(false);
+  const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
+  const [commentText, setCommentText] = useState('');
+  const [userComments, setUserComments] = useState(COMMENTS);
+  const [viewCount, setViewCount] = useState(parsedPost ? parsedPost.view : 0);
+
+  const relativeDate = formatDistanceToNow(new Date(), { addSuffix: true });
 
   if (!parsedPost) {
     return <Text>포스트 없음</Text>;
   }
 
+  useEffect(() => {
+    if (parsedPost) {
+      incrementView(parsedPost.id)
+        .then(() => {
+          setViewCount(viewCount + 1); // 조회수 증가
+        })
+        .catch(error => console.error('Error incrementing view count:', error));
+    }
+  }, [parsedPost]);
+
   const tagColor = getTagColor(parsedPost.tag);
+
+  const handleLikePress = () => {
+    setIsLiked(!isLiked);
+  };
+
+  const handleCommentSubmit = () => {
+    if (commentText.trim()) {
+      const newComment = {
+        id: userComments.length + 100,
+        author: '비밀',
+        content: commentText,
+        createdAt: new Date().toLocaleString('ko-KR'),
+        likes: 0,
+        avatar: 'https://i.pravatar.cc/150?u=anonymous'
+      };
+      setUserComments([...userComments, newComment]);
+      setCommentText('');
+    }
+  };
 
   return (
     <SafeAreaProvider style={styles.safeArea}>
-      <StatusBar barStyle="dark-content" />
-      
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.contentWrapper}>
-          <View style={styles.profileContainer}>
-            <Image
-              source={{ uri: `https://i.pravatar.cc/150?u=${parsedPost.author}` }}
-              style={styles.avatar}
-            />
-            <View>
-              <Text style={styles.authorName}>{parsedPost.author}</Text>
-              <Text style={styles.postDate}>2025년 9월 25일</Text>
-            </View>
-          </View>
-          
-          <View style={styles.postContainer}>
-            <View style={[styles.tag, { backgroundColor: tagColor }]}>
-              <Text style={styles.tagText}>{parsedPost.tag}</Text>
+      <SafeAreaView style={styles.container} edges={['bottom']}>
+        <StatusBar barStyle="dark-content" />
+        
+        <ScrollView contentContainerStyle={styles.scrollContainer}>
+          {/* 포스트 헤더 */}
+          <View style={styles.contentWrapper}>
+            <View style={styles.tag}>
+              <Text style={[styles.tagText, { color: tagColor }]}>{parsedPost.tag}</Text>
             </View>
             <Text style={styles.title}>{parsedPost.title}</Text>
-            <Text style={styles.content}>{parsedPost.content}</Text>
+            <View style={styles.profileContainer}>
+              <Image
+                source={{ uri: `https://i.pravatar.cc/150?u=${parsedPost.user_id}` }}
+                style={styles.avatar}
+              />
+              <View>
+                <Text style={styles.authorName}>{parsedPost.user_id}</Text>
+                <Text style={styles.postDate}>{relativeDate}</Text>
+              </View>
+            </View>
+            
+            {/* 포스트 내용 */}
+            <View style={styles.postContainer}>
+              <Text style={styles.content}>{parsedPost.content}</Text>
+            </View>
           </View>
-        </View>
+        </ScrollView>
 
-        <View style={styles.statsContainer}>
-          <Text style={styles.statsText}>좋아요 {parsedPost.like}</Text>
-          <Text style={styles.statsText}>댓글 {parsedPost.comment}</Text>
-          <Text style={styles.statsText}>조회수 {parsedPost.views}</Text>
+        {/* 공감 및 댓글 */}
+        <View style={styles.actionBar}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleLikePress}>
+            {isLiked
+              ? (
+                <FontAwesome name="heart" size={20} color={'red'} />
+              ) : (
+                <FontAwesome name="heart-o" size={20} color={COLORS.black} />
+              )}
+              {/* <Text style={styles.actionText}>{parsedPost.like_count}</Text> */}
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.actionButton} onPress={() => setIsCommentModalVisible(true)}>
+            <FontAwesome name="commenting-o" size={20} color={COLORS.black} />
+            {/* <Text style={styles.actionText}>{parsedPost.comment_count}</Text> */}
+          </TouchableOpacity>
         </View>
-      </ScrollView>
+      </SafeAreaView>
 
-      <View style={styles.actionBar}>
-        <TouchableOpacity style={styles.actionButton}>
-          <HeartIcon filled={true} />
-          <Text style={[styles.actionText, {color: COLORS.primary}]}>공감</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.actionButton}>
-          <CommentIcon />
-          <Text style={styles.actionText}>댓글</Text>
-        </TouchableOpacity>
-      </View>
+      {/* 댓글 모달 */}
+      <CommentModal
+        visible={isCommentModalVisible}
+        onClose={() => setIsCommentModalVisible(false)}
+        onSubmitComment={handleCommentSubmit}
+        userComments={userComments}
+      />
     </SafeAreaProvider>
   );
 };
@@ -79,42 +133,46 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: COLORS.white
   },
+  container: {
+    flex: 1,
+    backgroundColor: COLORS.white
+  },
   scrollContainer: {
     paddingBottom: 80
   },
   contentWrapper: {
     backgroundColor: COLORS.white,
-    padding: 20
+    padding: SIZES.large,
   },
   profileContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 30
+    marginBottom: SIZES.large,
   },
   avatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    marginRight: 12,
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    marginRight: 10,
     backgroundColor: COLORS.lightGray
   },
   authorName: {
-    fontSize: 16,
-    fontWeight: 'bold',
+    fontSize: 13,
     color: COLORS.black
   },
   postDate: {
-    fontSize: 12,
+    ...FONTS.h4,
     color: COLORS.gray,
-    marginTop: 2
+    marginTop: 5,
   },
-  postContainer: {},
+  postContainer: {
+    paddingTop: SIZES.large,
+    borderTopWidth: 0.7,
+    borderColor: COLORS.gray,
+  },
   tag: {
     alignSelf: 'flex-start',
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 14,
-    marginBottom: 20
+    marginBottom: SIZES.small,
   },
   tagText: {
     color: COLORS.white,
@@ -122,36 +180,19 @@ const styles = StyleSheet.create({
     fontWeight: 'bold'
   },
   title: {
-    fontSize: 24,
+    ...FONTS.h2,
     fontWeight: 'bold',
     color: COLORS.black,
     marginBottom: 30,
     lineHeight: 32
   },
   content: {
-    fontSize: 16,
+    paddingTop: SIZES.small,
+    fontSize: 15,
     color: COLORS.darkGray,
-    lineHeight: 24
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    paddingHorizontal: 20,
-    paddingVertical: 12,
-    backgroundColor: COLORS.white,
-    marginTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: COLORS.lightGray
-  },
-  statsText: {
-    fontSize: 13,
-    color: COLORS.gray,
-    marginRight: 16
+    lineHeight: 27,
   },
   actionBar: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
     flexDirection: 'row',
     justifyContent: 'flex-start',
     alignItems: 'center',
@@ -173,10 +214,7 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     fontWeight: '600'
   },
-  iconText: {
-    fontSize: 20,
-    color: COLORS.darkGray
-  }
+
 });
 
 export default PostDetail;

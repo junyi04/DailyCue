@@ -1,44 +1,47 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
-import * as Linking from "expo-linking";
+import * as KakaoLogin from "@react-native-seoul/kakao-login";
 import { router } from "expo-router";
-import * as WebBrowser from "expo-web-browser";
-import { StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { useState } from "react";
+import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Image } from "react-native-elements";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
-export default function LoginScreen() {
-  // Supabase OAuth 리다이렉션
-  const redirectUrl = Linking.createURL("login-callback");
 
+export default function LoginScreen() {
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+
+  // 카카오 로그인 핸들러
   const handleKakaoLogin = async () => {
     try {
-      // 카카오 로그인 시 Supabase OAuth 사용
-      const { data, error } = await supabase.auth.signInWithOAuth({
+      setIsLoggingIn(true);
+
+      // 카카오 네이티브 SDK로 로그인
+      const result = await KakaoLogin.login();
+      console.log("Kakao login success:", result);
+
+      // Supabase 연동 (idToken 사용)
+      const { data, error } = await supabase.auth.signInWithIdToken({
         provider: "kakao",
-        options: { redirectTo: redirectUrl },
+        token: result.idToken,
       });
 
       if (error) {
-        console.error("supabase 카카오 로그인 실패:", error.message);
+        console.error("Supabase 연동 실패:", error.message);
+        Alert.alert("로그인 실패", "Supabase 연동 오류");
         return;
       }
 
-      console.log("Supabase 발급 URL:", data.url);
+      console.log("Supabase 로그인 성공:", data);
+      Alert.alert("로그인 성공", "카카오 + Supabase 로그인 완료");
 
-      if (data?.url) {
-        const result = await WebBrowser.openAuthSessionAsync(data.url, redirectUrl);
-        console.log("openAuthSessionAsync 결과:", result);
-
-        if (result.type === "success") {
-          console.log("카카오 로그인 redirect 성공");
-          router.push("/main");
-        } else {
-          console.warn("로그인 취소 또는 실패:", result.type);
-        }
-      }
-    } catch (err) {
-      console.error("카카오 로그인 에러:", err);
+      // 메인 화면 이동
+      router.push("/main");
+    } catch (err: any) {
+      console.error("Kakao login error:", err);
+      Alert.alert("로그인 실패", err.message || "알 수 없는 오류");
+    } finally {
+      setIsLoggingIn(false);
     }
   };
 
@@ -46,7 +49,7 @@ export default function LoginScreen() {
     <SafeAreaProvider style={styles.container}>
       <View style={styles.headerWrap}>
         <Image
-          source={require('@/assets/images/DailyCue1.png')}
+          source={require('@/assets/images/DailyCue.png')}
           style={{ width: 100, height: 70 }}
         />
         <Text style={styles.brand}>하루를 케어하다</Text>
@@ -92,26 +95,33 @@ export default function LoginScreen() {
         <TouchableOpacity style={styles.googleBtn}>
           <Image
             source={require('@/assets/images/google.png')} 
-            style={{ width: 30, height: 30 }}
+            style={{
+              width: 30,
+              height: 30,
+            }} 
           />
           <Text style={styles.socialText}>구글로 로그인</Text>
         </TouchableOpacity>
-
         <TouchableOpacity style={styles.naverBtn}>
           <Image
             source={require('@/assets/images/naver.png')} 
-            style={{ width: 30, height: 30 }}
+            style={{
+              width: 30,
+              height: 30,
+            }} 
           />
           <Text style={[styles.socialText, { color: COLORS.white }]}>네이버 로그인</Text>
         </TouchableOpacity>
-
         <TouchableOpacity onPress={handleKakaoLogin} style={styles.kakaoBtn}>
-          <Image
-            source={require('@/assets/images/kakaoTalk.png')}
-            style={{ width: 20, height: 20 }}
-          />
-          <Text style={styles.kakaoText}>카카오 로그인</Text>
-        </TouchableOpacity>
+            <Image
+              source={require('@/assets/images/kakaoTalk.png')}
+              style={{
+                width: 20,
+                height: 20,
+              }}  
+            />
+            <Text style={styles.kakaoText}>카카오 로그인</Text>
+          </TouchableOpacity>
       </View>
     </SafeAreaProvider>
   );
@@ -120,48 +130,56 @@ export default function LoginScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: "center",
+    alignItems: 'center',
     paddingHorizontal: 40,
     backgroundColor: COLORS.secondary,
     paddingTop: 100,
   },
   headerWrap: {
-    width: "100%",
-    justifyContent: "center",
-    alignItems: "center",
+    width: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
     marginBottom: 50,
   },
   brand: {
     fontSize: 23,
     color: COLORS.white,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     marginTop: 20,
   },
   input: {
     ...FONTS.h3,
-    width: "95%",
-    backgroundColor: "#cfdfff",
+    width: '95%',
+    backgroundColor: '#cfdfff',
     borderRadius: SIZES.medium,
     paddingHorizontal: SIZES.medium,
     height: 45,
-    borderColor: "#E5E7EB",
-    color: "#111827",
+    borderColor: '#E5E7EB',
+    color: '#111827',
     marginBottom: 10,
+
+  },
+  findLink: {
+    fontSize: 13,
+    alignSelf: 'flex-end',
+    color: '#EDF3FF',
+    textDecorationLine: 'underline',
+    marginBottom: 30,
   },
   primaryActions: {
-    flexDirection: "row",
-    width: "100%",
-    justifyContent: "space-between",
+    flexDirection: 'row',
+    width: '100%',
+    justifyContent: 'space-between',
     marginBottom: 20,
   },
   primaryBtn: {
     flex: 1,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
     height: 50,
     borderRadius: SIZES.medium,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginTop: 10,
     marginHorizontal: 8,
   },
@@ -169,63 +187,63 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
   },
   signupBtn: {
-    backgroundColor: "#002b76",
+    backgroundColor: '#002b76',
   },
   primaryText: {
     ...FONTS.h3,
-    fontWeight: "bold",
-    color: "#002b76",
+    fontWeight: 'bold',
+    color: '#002b76',
   },
   signupText: {
     ...FONTS.h3,
-    fontWeight: "bold",
+    fontWeight: 'bold',
     color: COLORS.white,
   },
   socialWrap: {
-    width: "95%",
+    width: '95%',
     marginTop: SIZES.mega,
   },
   googleBtn: {
     height: 50,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
     borderRadius: SIZES.medium,
     backgroundColor: COLORS.white,
     borderWidth: 1,
     borderColor: COLORS.white,
-    alignItems: "center",
-    justifyContent: "center",
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 15,
   },
   naverBtn: {
     height: 50,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 10,
     borderRadius: SIZES.medium,
-    backgroundColor: "#2DB400",
+    backgroundColor: '#2DB400',
     borderWidth: 1,
-    borderColor: "#2DB400",
-    alignItems: "center",
-    justifyContent: "center",
+    borderColor: '#2DB400',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: 15,
   },
   kakaoBtn: {
     height: 50,
-    flexDirection: "row",
+    flexDirection: 'row',
     gap: 15,
     borderRadius: SIZES.medium,
-    backgroundColor: "#FEE500",
-    alignItems: "center",
-    justifyContent: "center",
+    backgroundColor: '#FEE500',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   kakaoText: {
     ...FONTS.h3,
-    fontWeight: "bold",
-    color: "#3C1E1E",
+    fontWeight: 'bold',
+    color: '#3C1E1E',
   },
   socialText: {
     ...FONTS.h3,
-    fontWeight: "bold",
-    color: "#3C1E1E",
+    fontWeight: 'bold',
+    color: '#3C1E1E',
   },
 });

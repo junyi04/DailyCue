@@ -8,7 +8,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 export default function ReadPostScreen() {
   return (
     <View style={styles.container}>
-
       <View style={styles.header}>
         <TouchableOpacity onPress={() => router.back()}>
           <Ionicons name="chevron-back" size={25} /> 
@@ -35,8 +34,8 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.white,
     borderBottomWidth: 1,
     borderBottomColor: '#E5E7EB',
-    paddingTop: 50,
-    paddingBottom: 20,
+    paddingTop: 40,
+    paddingBottom: 15,
   },
   headerTitle: {
     fontSize: 18,

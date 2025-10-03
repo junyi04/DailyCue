@@ -45,6 +45,13 @@ export default {
           backgroundColor: "#ffffff",
         },
       ],
+      [
+        "@react-native-seoul/kakao-login",
+        {
+          kakaoAppKey: "bb6c2b86af4af113d831f074fbbe1a0f",
+          postlink: "kakaotalk"
+        }
+      ]
     ],
     experiments: {
       typedRoutes: true,
