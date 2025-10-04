@@ -4,6 +4,7 @@ import { useEffect, useRef } from "react";
 import { Animated, StyleSheet, Text } from "react-native";
 import { Image } from "react-native-elements";
 
+
 export default function LoadingScreen() {
   const fadeAnim = useRef(new Animated.Value(1)).current;
 

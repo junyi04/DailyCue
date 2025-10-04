@@ -3,7 +3,7 @@ export default {
     name: "DailyCue",
     slug: "dailycue",
     owner: "junyi04",
-    scheme: "dailycuetest",
+    scheme: "dailycue",
     platforms: ["ios", "android"],
     version: "1.0.0",
     orientation: "portrait",
@@ -19,13 +19,17 @@ export default {
       intentFilters: [
         {
           action: "VIEW",
+          autoVerify: true,
           data: [
-            { scheme: "dailycuetest", host: "login-callback" },
-            { scheme: "exp+dailycue", host: "login-callback" },
+            {
+              scheme: "dailycue",
+              host: "login",
+              pathPrefix: "/callback"
+            }
           ],
-          category: ["BROWSABLE", "DEFAULT"],
-        },
-      ],
+          category: ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     web: {
       bundler: "metro",

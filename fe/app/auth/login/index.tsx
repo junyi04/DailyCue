@@ -1,49 +1,64 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
-import * as KakaoLogin from "@react-native-seoul/kakao-login";
 import { router } from "expo-router";
+import * as WebBrowser from 'expo-web-browser';
 import { useState } from "react";
 import { Alert, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { Image } from "react-native-elements";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 
+// 앱이 웹 브라우저를 갔다 돌아왔을 때, 웹 세션을 닫아주는 역할
+WebBrowser.maybeCompleteAuthSession();
+
 export default function LoginScreen() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
   // 카카오 로그인 핸들러
-  const handleKakaoLogin = async () => {
-    try {
-      setIsLoggingIn(true);
+const handleKakaoLogin = async () => {
+  setIsLoggingIn(true);
+  try {
+    console.log("🟡 카카오 로그인 시도 중...");
 
-      // 카카오 네이티브 SDK로 로그인
-      const result = await KakaoLogin.login();
-      console.log("Kakao login success:", result);
+    // Supabase로 카카오 OAuth 로그인 요청
+    const { data, error } = await supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: {
+        redirectTo: 'https://iewyffoogsqutukommtp.supabase.co/auth/v1/callback',
+      },
+    });
 
-      // Supabase 연동 (idToken 사용)
-      const { data, error } = await supabase.auth.signInWithIdToken({
-        provider: "kakao",
-        token: result.idToken,
-      });
+    if (error) throw error;
+    if (!data?.url) throw new Error("로그인 URL을 받지 못했습니다.");
 
-      if (error) {
-        console.error("Supabase 연동 실패:", error.message);
-        Alert.alert("로그인 실패", "Supabase 연동 오류");
-        return;
-      }
+    console.log("🔗 로그인 URL:", data.url);
 
-      console.log("Supabase 로그인 성공:", data);
-      Alert.alert("로그인 성공", "카카오 + Supabase 로그인 완료");
+    // 웹 브라우저에서 카카오 로그인 페이지 열기
+    const res = await WebBrowser.openAuthSessionAsync(
+      data.url,
+      'dailycue://login/callback'
+    );
 
-      // 메인 화면 이동
-      router.push("/main");
-    } catch (err: any) {
-      console.error("Kakao login error:", err);
-      Alert.alert("로그인 실패", err.message || "알 수 없는 오류");
-    } finally {
-      setIsLoggingIn(false);
+    if (res.type === 'success') {
+      console.log("🟢 카카오 로그인 완료 — Supabase 세션 대기 중...");
+      Alert.alert("로그인 성공", "카카오 로그인이 완료되었습니다!");
+
+      // 짧은 대기 후 메인으로 이동 (세션 갱신 시간 보정)
+      setTimeout(() => {
+        router.push("/main");
+      }, 1000);
+    } else if (res.type === 'cancel' || res.type === 'dismiss') {
+      console.warn("⚠️ 카카오 로그인 취소됨");
+      Alert.alert("로그인 취소", "카카오 로그인이 취소되었습니다.");
     }
-  };
+  } catch (err: any) {
+    console.error("🔴 로그인 오류:", err);
+    Alert.alert("로그인 실패", err.message || "카카오 로그인 중 오류가 발생했습니다.");
+  } finally {
+    setIsLoggingIn(false);
+  }
+};
+
 
   return (
     <SafeAreaProvider style={styles.container}>
@@ -247,3 +262,127 @@ const styles = StyleSheet.create({
     color: '#3C1E1E',
   },
 });
+
+// import { Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
+// import React, { useState } from "react";
+// import {
+//   login,
+//   logout,
+//   getProfile as getKakaoProfile,
+//   shippingAddresses as getKakaoShippingAddresses,
+//   unlink,
+// } from "@react-native-seoul/kakao-login";
+
+// const App = () => {
+//   const [result, setResult] = useState<string>("");
+
+//   const signInWithKakao = async (): Promise<void> => {
+//     try {
+//       const token = await login();
+//       setResult(JSON.stringify(token));
+//       console.log("login success ", token.accessToken);
+//     } catch (err) {
+//       console.error("login err", err);
+//     }
+//   };
+
+//   const signOutWithKakao = async (): Promise<void> => {
+//     try {
+//       const message = await logout();
+
+//       setResult(message);
+//     } catch (err) {
+//       console.error("signOut error", err);
+//     }
+//   };
+
+//   const getProfile = async (): Promise<void> => {
+//     try {
+//       const profile = await getKakaoProfile();
+
+//       setResult(JSON.stringify(profile));
+//     } catch (err) {
+//       console.error("signOut error", err);
+//     }
+//   };
+
+//   const getShippingAddresses = async (): Promise<void> => {
+//     try {
+//       const shippingAddresses = await getKakaoShippingAddresses();
+
+//       setResult(JSON.stringify(shippingAddresses));
+//     } catch (err) {
+//       console.error("signOut error", err);
+//     }
+//   };
+
+//   const unlinkKakao = async (): Promise<void> => {
+//     try {
+//       const message = await unlink();
+
+//       setResult(message);
+//     } catch (err) {
+//       console.error("signOut error", err);
+//     }
+//   };
+
+//   return (
+//     <View style={styles.container}>
+//       <View style={styles.resultContainer}>
+//         <ScrollView>
+//           <Text>{result}</Text>
+//           <View style={{ height: 100 }} />
+//         </ScrollView>
+//       </View>
+//       <Pressable
+//         style={styles.button}
+//         onPress={() => {
+//           signInWithKakao();
+//         }}
+//       >
+//         <Text style={styles.text}>카카오 로그인</Text>
+//       </Pressable>
+//       <Pressable style={styles.button} onPress={() => getProfile()}>
+//         <Text style={styles.text}>프로필 조회</Text>
+//       </Pressable>
+//       <Pressable style={styles.button} onPress={() => getShippingAddresses()}>
+//         <Text style={styles.text}>배송주소록 조회</Text>
+//       </Pressable>
+//       <Pressable style={styles.button} onPress={() => unlinkKakao()}>
+//         <Text style={styles.text}>링크 해제</Text>
+//       </Pressable>
+//       <Pressable style={styles.button} onPress={() => signOutWithKakao()}>
+//         <Text style={styles.text}>카카오 로그아웃</Text>
+//       </Pressable>
+//     </View>
+//   );
+// };
+
+// export default App;
+
+// const styles = StyleSheet.create({
+//   container: {
+//     height: "100%",
+//     justifyContent: "flex-end",
+//     alignItems: "center",
+//     paddingBottom: 100,
+//   },
+//   resultContainer: {
+//     flexDirection: "column",
+//     width: "100%",
+//     padding: 24,
+//   },
+//   button: {
+//     backgroundColor: "#FEE500",
+//     borderRadius: 40,
+//     borderWidth: 1,
+//     width: 250,
+//     height: 40,
+//     paddingHorizontal: 20,
+//     paddingVertical: 10,
+//     marginTop: 10,
+//   },
+//   text: {
+//     textAlign: "center",
+//   },
+// });
