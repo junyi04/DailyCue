@@ -1,9 +1,9 @@
 export default {
   expo: {
+    scheme: "dailycue",
     name: "DailyCue",
     slug: "dailycue",
     owner: "junyi04",
-    scheme: "dailycue",
     platforms: ["ios", "android"],
     version: "1.0.0",
     orientation: "portrait",
@@ -19,7 +19,6 @@ export default {
       intentFilters: [
         {
           action: "VIEW",
-          autoVerify: true,
           data: [
             {
               scheme: "dailycue",
@@ -41,6 +40,15 @@ export default {
       "expo-web-browser",
       "expo-dev-client",
       [
+        "expo-build-properties",
+        {
+          android: {
+            kotlinVersion: "2.0.21",
+            gradleCommand: ":app:assembleRelease",
+          },
+        },
+      ],
+      [
         "expo-splash-screen",
         {
           image: "./assets/splash.png",
@@ -52,10 +60,10 @@ export default {
       [
         "@react-native-seoul/kakao-login",
         {
-          kakaoAppKey: "bb6c2b86af4af113d831f074fbbe1a0f",
+          kakaoAppKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_KEY,
           postlink: "kakaotalk"
         }
-      ]
+      ],
     ],
     experiments: {
       typedRoutes: true,
@@ -63,7 +71,7 @@ export default {
     extra: {
       supabaseUrl: process.env.EXPO_PUBLIC_SUPABASE_URL,
       supabaseAnonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY,
-      supabaseNativeKey: process.env.EXPO_PUBLIC_SUPABASE_NATIVE_KEY,
+      kakaoNativeKey: process.env.EXPO_PUBLIC_KAKAO_NATIVE_KEY,
       eas: {
         projectId: "f5175e35-e195-40cd-850d-fb8126ca7d70",
       },

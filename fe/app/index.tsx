@@ -1,34 +1,24 @@
 import { COLORS } from "@/constants/theme";
 import { router } from "expo-router";
 import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text } from "react-native";
-import { Image } from "react-native-elements";
+import { Animated, Image, StyleSheet, Text } from "react-native";
 
+export default function SplashScreen() {
+  const fadeAnim = useRef(new Animated.Value(0)).current;
 
-export default function LoadingScreen() {
-  const fadeAnim = useRef(new Animated.Value(1)).current;
-
-  // 3초 후 로그인 화면으로 이동
   useEffect(() => {
-    const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        router.replace("/auth/login");
-      });
-    }, 3000);
-
-    return () => clearTimeout(timer);
-  }, [fadeAnim]);
+    Animated.sequence([
+      Animated.timing(fadeAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
+      Animated.delay(2000),
+      Animated.timing(fadeAnim, { toValue: 0, duration: 500, useNativeDriver: true }),
+    ]).start(() => {
+      setTimeout(() => router.replace("/auth/login"), 100);
+    });
+  }, []);
 
   return (
     <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
-      <Image
-        source={require("@/assets/images/DailyCue.png")}
-        style={{ width: 100, height: 70 }}
-      />
+      <Image source={require("@/assets/images/DailyCue.png")} style={styles.logo} />
       <Text style={styles.text}>DailyCue</Text>
     </Animated.View>
   );
@@ -42,6 +32,11 @@ const styles = StyleSheet.create({
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: COLORS.secondary,
+  },
+  logo: {
+    width: 100,
+    height: 70,
+    resizeMode: "contain",
   },
   text: {
     fontSize: 35,
