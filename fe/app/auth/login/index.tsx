@@ -7,8 +7,10 @@ export default function LoginScreen() {
     try {
       // Kakao SDK 로그인
       const token = await login();
-      console.log("Access Token:", token.accessToken);
-      console.log("📡 Supabase 로그인 요청 전송 중...");
+      console.log("🟡 token object:", token);
+      console.log("🟢 Access Token:", token.accessToken);
+      console.log("🟢 ID Token:", token.idToken);
+
 
       // Supabase Edge Function 호출
       const res = await fetch(
@@ -28,19 +30,11 @@ export default function LoginScreen() {
         return;
       }
 
-      // 백엔드에서 status: "signup" | "login" 으로 구분해서 보냄
-      if (result.status === "signup") {
-        Alert.alert("회원가입 완료 🎉", "가입해주셔서 감사합니다!");
-      } else if (result.status === "login") {
-        Alert.alert("로그인 성공 😊", "다시 만나서 반가워요!");
-      } else {
-        Alert.alert("로그인 성공", "환영합니다!");
-      }
-
       console.log("Supabase 세션 생성 완료:", result);
+      Alert.alert("로그인 성공", "환영합니다!");
       router.replace("/main");
     } catch (err: any) {
-      console.error("카카오 로그인 에러:", err);
+      console.error("❌ 카카오 로그인 에러:", err);
       Alert.alert("로그인 실패", err.message);
     }
   };
