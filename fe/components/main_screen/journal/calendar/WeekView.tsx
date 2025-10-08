@@ -1,6 +1,6 @@
 // WeekView.tsx (수정)
 
-import { COLORS } from "@/constants/theme";
+import { COLORS, FONTS } from "@/constants/theme";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import React from "react";
@@ -56,16 +56,16 @@ const styles = StyleSheet.create({
   weekContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    paddingVertical: 5,
+    paddingVertical: 15,
   },
   dayContainer: {
     justifyContent: 'center',
     alignItems: 'center',
   },
   dayText: {
-    fontSize: 12,
+    fontSize: 13,
     color: COLORS.darkGray,
-    marginBottom: 4,
+    marginBottom: 5,
   },
   selectedText: {
     color: COLORS.black,
@@ -82,7 +82,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
   },
   dateText: {
-    fontSize: 15,
+    ...FONTS.h3,
     color: COLORS.darkGray,
   },
   selectedDateText: {

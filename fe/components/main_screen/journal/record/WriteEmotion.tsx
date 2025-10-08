@@ -1,5 +1,5 @@
-import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { View, Text, StyleSheet, TextInput } from "react-native";
+import { COLORS, SIZES } from "@/constants/theme";
+import { StyleSheet, TextInput, View } from "react-native";
 
 
 interface WriteBoxProps {
@@ -19,7 +19,7 @@ const WriteEmotion: React.FC<WriteBoxProps> = ({ title, setTitle, content, setCo
             value={title}
             onChangeText={setTitle}
             placeholder="제목을 입력해주세요."
-            placeholderTextColor={COLORS.gray}
+            placeholderTextColor={COLORS.darkGray}
             
           />
         </View>
@@ -30,7 +30,7 @@ const WriteEmotion: React.FC<WriteBoxProps> = ({ title, setTitle, content, setCo
             onChangeText={setContent}
             multiline
             placeholder="내용을 입력해주세요."
-            placeholderTextColor={COLORS.gray}
+            placeholderTextColor={COLORS.darkGray}
           />
         </View>
       </View>
@@ -43,15 +43,7 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-start',
     paddingHorizontal: SIZES.small,
-    marginHorizontal: SIZES.mega,
-    borderTopLeftRadius: SIZES.large,
-    borderTopRightRadius: SIZES.large,
-    backgroundColor: COLORS.white,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
+    borderRadius: SIZES.large,
   },
   postContainer: {
     flex: 1,
@@ -65,10 +57,10 @@ const styles = StyleSheet.create({
   title: {
     fontSize: 17,
     fontWeight: 'bold',
-    padding: 10
+    padding: 10,
   },
   contentContainer: {
-    // KeyBoardAvoidingView에 의해 Content 부분이 글 작성 시 올라감
+    // Content 부분이 글 작성 시 올라감
     flex: 1,
     marginTop: SIZES.small,
   },

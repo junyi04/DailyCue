@@ -2,46 +2,58 @@ import Board from "@/components/main_screen/community/Board";
 import ChooseTag from "@/components/main_screen/community/ChooseTag";
 import CommunityPost from '@/components/main_screen/community/CommunityPost';
 import SearchBox from "@/components/main_screen/community/SearchBox";
-import { DUMMY_POSTS } from '@/constants/communityContents';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
+import { supabase } from '@/lib/supabaseClient';
 import { Post } from '@/types';
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useState } from 'react';
-import { FlatList, SafeAreaView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-
+import React, { useEffect, useState } from 'react';
+import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function CommunityScreen() {
   const { post } = useLocalSearchParams<{ post?: string }>();
   const parsedPost: Post | null = post ? JSON.parse(post) : null;
-  
+
+  // console.log("Parsed Post:", parsedPost);
+  // console.log("Post param:", post); 
+
   // 기존 post + 새 글 합치기
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
-  const posts = parsedPost ? [parsedPost, ...DUMMY_POSTS] : DUMMY_POSTS;
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  const filteredPosts = activeTag === "전체"
-    ? posts
-    : posts.filter(post => post.tag === activeTag);
+  // supabase에서 데이터 가져오기
+  useEffect(() => {
+    const fetchPosts = async () => {
+      const { data, error } = await supabase
+        .from('posts_with_details')
+        .select('*')
+        .order('created_at', { ascending: false });
 
+      if (error) {
+        console.error('Error fetching posts:', error.message);
+        return;
+      }
 
-  // 백엔드 연결 시 API 호출 DB에 저장된 글 목록 불럭오기.
-  // const [posts, setPosts] = useState<Post[]>([]);
+      console.log("Fetched data:", data); 
 
-  // useEffect(() => {
-  //   const fetchPosts = async () => {
-  //     const res = await fetch("http://localhost:8080/posts");
-  //     const data = await res.json();
-  //     setPosts(data);
-  //   };
-  //   fetchPosts();
-  // }, []);
+      const allPosts = parsedPost ? [parsedPost, ...(data ?? [])] : (data ?? []);
+      const filteredPosts = activeTag === "전체"
+        ? allPosts
+        : allPosts.filter(post => post.tag === activeTag);
 
+      console.log("Filtered posts:", filteredPosts); 
+      setPosts(filteredPosts);
+    };
+
+    fetchPosts();
+  }, [activeTag, parsedPost]);
 
   const router = useRouter();
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaProvider style={styles.container}>
       <LinearGradient
         colors={[COLORS.secondary, COLORS.pageBackground]} 
         locations={[0.3, 0.7]}
@@ -55,20 +67,26 @@ export default function CommunityScreen() {
       <SearchBox />
       <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
 
+      {/* 추천 글 */}
+      <Board activeTag={activeTag} posts={posts} />
+
+      {/* 일반 게시글 */}
       <FlatList
-        data={filteredPosts}
+        data={posts}
         renderItem={({ item }) => <CommunityPost post={item} />}
         keyExtractor={item => item.id}
         contentContainerStyle={{ paddingVertical: SIZES.medium }}
-        ListHeaderComponent={<Board activeTag={activeTag} />}
       />
 
-      <TouchableOpacity style={styles.post} onPress={() => router.push('/main/community/write_post')}>
+      <TouchableOpacity
+        style={styles.post}
+        onPress={() => router.push('/main/community/write_post')}
+      >
         <FontAwesome name="pencil" size={30} color={COLORS.white} />
       </TouchableOpacity>
-    </SafeAreaView>
+    </SafeAreaProvider>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { 
@@ -86,12 +104,6 @@ const styles = StyleSheet.create({
     ...FONTS.h2,
     color: COLORS.darkBlueGray,
     fontWeight: 'bold',
-  },
-  text: {
-    ...FONTS.h3,
-    fontWeight: 'bold',
-    paddingHorizontal: SIZES.large,
-    marginVertical: 20,
   },
   post: {
     position: 'absolute',

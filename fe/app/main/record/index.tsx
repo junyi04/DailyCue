@@ -2,7 +2,7 @@ import ChooseEmoji from "@/components/main_screen/journal/record/ChooseEmoji";
 import WriteEmotion from "@/components/main_screen/journal/record/WriteEmotion";
 import { COLORS, SIZES } from "@/constants/theme";
 import { useRecords } from "@/hooks/useRecords";
-import { Post, Record } from "@/types";
+import { Record } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { router } from "expo-router";
@@ -13,7 +13,7 @@ import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOp
 export default function RecordScreen() {
   const { addRecord } = useRecords();
 
-  const [emoji, setEmoji] = useState<Record['emoji'] | null>(null);
+  const [emoji, setEmoji] = useState<Record['emoji'] | null>('😆');
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
@@ -63,12 +63,12 @@ export default function RecordScreen() {
           </View>
 
           {/* 감정 이모티콘 선택 */}
-          <View style={{ position: 'absolute', top: 100, left: 0, right: 0 }}>
+          <View style={{ flex: 1 }}>
             <ChooseEmoji selectedEmoji={emoji} onSelectEmoji={setEmoji} />
           </View>
 
           {/* 기록 작성 */}
-          <View style={{ flex: 1, paddingTop: 120, }}>
+          <View style={{ flex: 1, paddingTop: 30, }}>
             <WriteEmotion title={title} setTitle={setTitle} content={content} setContent={setContent} />
           </View>
 

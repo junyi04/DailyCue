@@ -14,7 +14,7 @@ export const BottomAppbar = () => {
   const tabs = [
     { name: '홈', icon: 'home', path: '/main' },
     { name: '커뮤니티', icon: 'users', path: '/main/community' },
-    { name: 'AI 챗봇', icon: 'message-circle', path: '/main/ai_partner' },
+    { name: 'AI', icon: 'message-circle', path: '/main/ai_partner' },
     { name: '요약', icon: 'file', path: '/main/summary' },
     { name: '설정', icon: 'settings', path: '/main/my_setting' },
   ] as const;

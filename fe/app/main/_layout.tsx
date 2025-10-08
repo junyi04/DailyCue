@@ -21,7 +21,12 @@ export default function MainLayout() {
   return (
     <View style={[styles.container, { paddingBottom: 60 + insets.bottom }]}>
       {/* Stack 화면 자체도 paddingBottom 적용 */}
-      <Stack screenOptions={{ headerShown: false }} />
+      <Stack 
+        screenOptions={{
+          headerShown: false,
+          animation: "none",
+        }} 
+      />
 
       {!keyboardVisible && (
         <View style={[styles.bottomAppbarContainer, { bottom: insets.bottom }]}>

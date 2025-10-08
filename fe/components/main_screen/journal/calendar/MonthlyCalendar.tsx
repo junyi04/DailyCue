@@ -1,23 +1,22 @@
-// MonthlyCalendar.tsx (이전 WeeklyCalendar.tsx를 이 파일로 교체)
-
 import {
   addMonths,
-  startOfMonth,
   endOfMonth,
   getDate,
   getDay,
-  getYear,
   getMonth,
+  getYear,
   isSameDay,
   setDate,
+  startOfMonth,
 } from 'date-fns';
 import React, { useEffect, useMemo, useState } from 'react';
 import { LayoutChangeEvent, StyleSheet, View } from 'react-native';
 
+import { SIZES } from '@/constants/theme';
 import WeekNavigator from './WeekNavigator';
 import WeekView from './WeekView';
 
-// 달력의 한 '줄'에 대한 정보를 담는 타입
+// 달력의 한 중에 대한 정보를 담는 타입
 interface CalendarRow {
   id: string;
   year: number;
@@ -35,7 +34,7 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  // --- 👇 달력 데이터 생성 로직 전면 재작성 ---
+  // 달력 데이터 생성 로직
   const { calendarRows, initialIndex } = useMemo(() => {
     const rows: CalendarRow[] = [];
     const today = new Date();
@@ -50,10 +49,9 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
       
       const firstDayOfMonth = startOfMonth(currentMonth);
       const lastDayOfMonth = endOfMonth(currentMonth);
-      const firstDayWeekday = getDay(firstDayOfMonth); // 0(일요일) ~ 6(토요일)
+      const firstDayWeekday = getDay(firstDayOfMonth);
       const lastDate = getDate(lastDayOfMonth);
 
-      // 해당 월의 날짜들을 배열로 만듦 (앞에 빈 칸 포함)
       const monthDays: (Date | null)[] = [];
       for (let j = 0; j < firstDayWeekday; j++) {
         monthDays.push(null); // 1일 시작 전까지 빈 칸 추가
@@ -62,7 +60,6 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
         monthDays.push(setDate(currentMonth, j));
       }
 
-      // 월 배열을 7일 단위로 잘라서 '달력의 줄'을 만듦
       let weekOfMonth = 1;
       while (monthDays.length > 0) {
         const weekDays = monthDays.splice(0, 7);
@@ -151,6 +148,7 @@ const MonthlyCalendar: React.FC<CalendarProps> = ({ onDateSelect }) => {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
+    paddingVertical: SIZES.small,
   },
 });
 

@@ -1,7 +1,10 @@
 // 추천 글 + 게시판 컴포넌트
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { incrementView } from "@/services/postService";
 import { Post } from "@/types";
-import React from "react";
+import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 
@@ -9,8 +12,30 @@ interface CommunityPostProps {
   posts: Post[];
 }
 
+
 const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
   const name = "준이";
+
+  const [viewCount, setViewCount] = useState<number>(0);
+
+  // 조회수 증가 핸들링
+  const handlePostPress = (post: Post) => {
+    incrementView(post.id);
+    
+    setViewCount(viewCount + 1);
+
+    router.push({
+      pathname: "/main/community/read_post",
+      params: { post: JSON.stringify(post) }
+    });
+  };
+
+  // 처음 화면에 보여지는 게시글의 조회수를 상태로 설정
+  useEffect(() => {
+    if (posts.length > 0) {
+      setViewCount(posts[0].views);
+    }
+  });
 
   return (
     <View style={styles.container}>
@@ -20,13 +45,31 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
         horizontal
         contentContainerStyle={{ paddingBottom: 20 }}
         keyExtractor={(item) => item.id}
+        showsHorizontalScrollIndicator={false}
         renderItem={({ item: post }) => (
-          <TouchableOpacity style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}>
+          <TouchableOpacity
+            style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}
+            onPress={() => handlePostPress(post)}
+          >
             <View style={styles.tag}>
               <Text style={[styles.tagText, { color: COLORS.gray }]}>{post.tag}</Text>
             </View>
             <Text style={[styles.title, { color: COLORS.darkGray }]}>{post.title}</Text>
-            <Text style={[styles.author, { color: COLORS.gray }]}>by {post.author}</Text>
+
+            <View style={styles.viewContainer}>
+              <View style={styles.statItem}>
+                <EvilIcons name="like" size={15} />
+                {/* <Text style={styles.statText}>{post.like_count}</Text> */}
+              </View>
+              <View style={styles.statItem}>
+                <FontAwesome name="commenting-o" size={10} />
+                <Text style={styles.statText}>{post.comment_count}</Text>
+              </View>
+              <View style={styles.statItem}>
+                <Ionicons name="eye-outline" size={14} />
+                <Text style={styles.statText}>{viewCount}</Text>
+              </View>
+            </View>
           </TouchableOpacity>
         )}
         ListHeaderComponent={
@@ -89,7 +132,24 @@ const styles = StyleSheet.create({
     fontSize: SIZES.small,
     right: SIZES.large,
     bottom: SIZES.small,
-
-  }
+  },
+  viewContainer: {
+    position: 'absolute',
+    left: SIZES.medium,
+    bottom: SIZES.small,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 15,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    ...FONTS.body,
+    fontSize: SIZES.small,
+    color: COLORS.gray,
+    marginLeft: 3,
+  },
 })
 export default HotIssue;

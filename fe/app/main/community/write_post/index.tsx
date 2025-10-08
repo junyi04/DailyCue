@@ -1,12 +1,12 @@
 import ChooseTag from "@/components/main_screen/community/write_post/ChooseTag";
 import WriteBox from "@/components/main_screen/community/write_post/WriteBox";
 import { COLORS, SIZES } from "@/constants/theme";
+import { createPost } from '@/services/postService';
 import { Post } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
-
 
 export default function WritePostScreen() {
   const router = useRouter();
@@ -14,44 +14,43 @@ export default function WritePostScreen() {
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
 
-  const saveHandler = () => {
-    if (!title || ! content || !tag) {
+  // 게시글 저장 처리
+  const saveHandler = async () => {
+    if (!title || !content || !tag) {
       alert("모든 항목을 입력해주세요.");
       return;
-    };
+    }
 
-    const newPost: Post = {
-      id: Date.now().toString(),
+    // 로그인 구현 전 supabase에서 가져온 테스트용 유저 id
+    const TEST_USER_ID = "c5c5a14b-1b8a-4c2d-8f3f-123456789abc";
+    const newPost: Omit<Post, "id"> = {
       tag,
       title,
       content,
-      author: "junyi", // 로그인 정보에서 받아오기
+      user_id: TEST_USER_ID,
+      like_count: 0,
+      comment_count: 0,
+      views: 0,
+      created_at: new Date().toISOString(),
     };
 
-    router.push({
-      pathname: '/main/community',
-      params: { post: JSON.stringify(newPost) },
-    });
+    try {
+      // createPost 호출: 백엔드에 게시글 저장
+      const savedPost = await createPost(newPost);
+      console.log("Post created successfully:", savedPost);
 
-    // 백엔드 연결 시 DB에 저장. 성공 응답 받고 화면 전환.
-    // try {
-    //   const res = await fetch("http://localhost:8080/posts", {
-    //     method: "POST",
-    //     headers: { "Content-Type": "application/json" },
-    //     body: JSON.stringify(newPost),
-    //   });
-    //   if (res.ok) {
-    //     router.push("/main/community");
-    //   } else {
-    //     alert("저장 실패");
-    //   }
-    // } catch (e) {
-    //   console.error(e);
-    // }
-  }
-  
+      // 게시글 저장 후 게시판 화면으로 이동
+      router.push({
+        pathname: "/main/community",
+        params: { post: JSON.stringify(savedPost) },
+      });
+    } catch (error) {
+      console.error("Error saving post:", error);
+      alert(`게시글 저장에 실패했습니다. 에러: ${error}`);
+    }
+  };
+
   return (
-    // 밀리는 부분은 flex를 적용시킨 부분
     <KeyboardAvoidingView
       style={styles.container}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
@@ -64,7 +63,7 @@ export default function WritePostScreen() {
           <View style={{ paddingTop: 80 }}>
             {/* 뒤로 가기 */}
             <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-              <Ionicons name="chevron-back" size={25} /> 
+              <Ionicons name="chevron-back" size={25} />
             </TouchableOpacity>
             
             {/* 저장하기 */}
