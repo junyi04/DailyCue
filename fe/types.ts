@@ -4,10 +4,11 @@ export interface Post {
   tag: '전체' | '공유해요' | '공감원해요' | '함께해요' | '고수찾아요';
   title: string;
   content: string;
-  author: string;
-  like: number;
-  comment: number;
+  user_id: string;
+  like_count: number;
+  comment_count: number;
   views: number;
+  created_at: string;
 }
 
 // AI 챗봇 메시지 타입

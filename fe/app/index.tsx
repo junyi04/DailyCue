@@ -1,55 +1,46 @@
 import { COLORS } from "@/constants/theme";
 import { router } from "expo-router";
-import { useEffect, useRef } from "react";
-import { Animated, StyleSheet, Text } from "react-native";
-import { Image } from "react-native-elements";
+import { useEffect } from "react";
+import { Image, StyleSheet, Text, View } from "react-native";
 
-
-export default function LoadingScreen() {
-  // 타입 명시적 지정
-  const fadeAnim = useRef<Animated.Value>(new Animated.Value(1)).current;
-
-  // 2초 후 서서히 로그인 화면으로 전환 
+export default function SplashScreen() {
   useEffect(() => {
+    // ✅ 1.5초 후 바로 로그인 화면으로 이동
     const timer = setTimeout(() => {
-      Animated.timing(fadeAnim, {
-        toValue: 0,
-        duration: 500,
-        useNativeDriver: true,
-      }).start(() => {
-        router.replace("/auth/login");
-      })
-    }, 2000);
+      router.replace("/auth/login");
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [fadeAnim]);
+  }, []);
 
   return (
-    <Animated.View style={[styles.container, { opacity: fadeAnim }]}>
+    <View style={styles.container}>
       <Image
-        source={require('@/assets/images/DailyCue1.png')}
-        style={{
-          width: 100,
-          height: 70,
-        }}
+        source={require("@/assets/images/DailyCue.png")}
+        style={styles.logo}
       />
       <Text style={styles.text}>DailyCue</Text>
-    </Animated.View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: 'row',
-    gap: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
     backgroundColor: COLORS.secondary,
+  },
+  logo: {
+    width: 100,
+    height: 70,
+    resizeMode: "contain",
+    marginRight: 20,
   },
   text: {
     fontSize: 35,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     color: COLORS.white,
   },
-})
+});

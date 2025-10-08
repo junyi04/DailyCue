@@ -12,7 +12,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 
 export default function JournalScreen() {
@@ -57,29 +57,31 @@ export default function JournalScreen() {
       {/* modalRecord가 있을 때만 Modal 띄움 */}
       <Modal
         visible={!!modalRecord}
-        animationType="fade"
-        transparent={false}
+        animationType="slide"
+        transparent={true}
         onRequestClose={() => setModalRecord(null)}
       >
         {/* 모달 내부 */}
-        <View style={styles.modalContainer}>
-          {modalRecord && (
-            <>
-              <View style={styles.expandedHeader}>
-                <Text style={styles.expandedDateText}>
-                  {format(new Date(modalRecord.createdAt), 'yyyy년 M월 d일')}
-                </Text>
-                <TouchableOpacity onPress={() => setModalRecord(null)} style={styles.headerCollapseButton}>
-                  <Ionicons name="close" size={28} color={COLORS.darkGray} />
-                </TouchableOpacity>
-              </View>
-              <ScrollView contentContainerStyle={styles.expandedScrollView}>
-                <Text style={styles.expandedEmoji}>{modalRecord.emoji}</Text>
-                <Text style={styles.expandedTitle}>{modalRecord.title}</Text>
-                <Text style={styles.expandedContent}>{modalRecord.content}</Text>
-              </ScrollView>
-            </>
-          )}
+        <View style={styles.overlay}>
+          <SafeAreaView style={[styles.modalContainer, { marginTop: 100 }]}>
+            {modalRecord && (
+              <>
+                <View style={styles.expandedHeader}>
+                  <Text style={styles.expandedDateText}>
+                    {format(new Date(modalRecord.createdAt), 'yyyy년 M월 d일')}
+                  </Text>
+                  <TouchableOpacity onPress={() => setModalRecord(null)} style={styles.headerCollapseButton}>
+                    <Ionicons name="close" size={28} color={COLORS.darkGray} />
+                  </TouchableOpacity>
+                </View>
+                <ScrollView contentContainerStyle={styles.expandedScrollView}>
+                  <Text style={styles.expandedEmoji}>{modalRecord.emoji}</Text>
+                  <Text style={styles.expandedTitle}>{modalRecord.title}</Text>
+                  <Text style={styles.expandedContent}>{modalRecord.content}</Text>
+                </ScrollView>
+              </>
+            )}
+          </SafeAreaView>
         </View>
       </Modal>
     </SafeAreaProvider>
@@ -98,9 +100,17 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: 'flex-end',
   },
+  overlay: {
+  flex: 1,
+    backgroundColor: "rgba(0,0,0,0.75)",
+    justifyContent: "flex-start",
+  },
+
   modalContainer: {
     flex: 1,
     backgroundColor: COLORS.pageBackground,
+    borderTopLeftRadius: SIZES.large,
+    borderTopRightRadius: SIZES.large,
   },
   expandedHeader: {
     flexDirection: 'row',
