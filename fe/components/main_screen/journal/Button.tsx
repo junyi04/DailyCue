@@ -1,5 +1,6 @@
 // 기록 저장 버튼 + 하얀 배경 뷰
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { Ionicons } from "@expo/vector-icons";
 import { format } from "date-fns";
 import { router } from "expo-router";
 import React from "react";
@@ -20,21 +21,21 @@ const Button: React.FC<ButtonProps> = ({ count }) => {
       
       <View style={{ flexDirection: 'column' }}>
         <Text style={styles.leftTopContainer}>{currentDate}</Text>
-        <Text style={styles.leftBottomContainer}>오늘 기록을 완료해주세요!</Text>
+        <Text style={styles.leftBottomContainer}>오늘 기록을 작성해주세요!</Text>
       </View>
       <Text style={styles.rightContainer}>{count} 회</Text>
+      {/* <Ionicons name="add" size={35} color={COLORS.black} style={{ marginRight: SIZES.mega }} /> */}
     </TouchableOpacity>
   );
 }
 
 const styles = StyleSheet.create({
   button: {
-    height: 85,
+    height: 80,
     flexDirection: 'row',
     backgroundColor: COLORS.white,
     borderRadius: SIZES.medium,
-    padding: SIZES.mega,
-    marginHorizontal: 35,
+    marginHorizontal: 25,
     marginBottom: 15,
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -47,16 +48,19 @@ const styles = StyleSheet.create({
   leftTopContainer: {
     ...FONTS.h4,
     paddingVertical: 5,
+    paddingLeft: SIZES.mega,
   },
   leftBottomContainer: {
     ...FONTS.h3,
     fontWeight: 'bold',
     paddingVertical: 5,
+    paddingLeft: SIZES.mega,
     color: COLORS.secondary,
   },
   rightContainer: {
     ...FONTS.h2,
     fontWeight: 'bold',
+    marginRight: SIZES.mega
   },
   text: {
     ...FONTS.h2,

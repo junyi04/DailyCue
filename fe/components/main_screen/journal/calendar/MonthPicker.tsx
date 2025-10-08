@@ -35,19 +35,19 @@ const MonthPicker: React.FC<MonthPickerProps> = ({ selectedMonth, onMonthChange 
 const styles = StyleSheet.create({
   pickerContainer: {
     width: 100,
-    alignSelf: 'flex-start',
+    alignSelf: 'center',
     justifyContent: 'center',
-    marginHorizontal: SIZES.small,
-    marginTop: 7,
+    marginHorizontal: 5,
+    marginTop: 5,
     transform: [{ scale: 1 }],
   },
   picker: {
-    ...FONTS.h3,
+    ...FONTS.h4,
     color: COLORS.black,
     fontWeight: 'bold',
   },
   pickerItem: {
-    ...FONTS.h3,
+    fontSize: 14,
     color: COLORS.black,
     fontWeight: 'bold',
   }

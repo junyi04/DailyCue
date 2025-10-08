@@ -17,9 +17,9 @@ type CardSectionProps = {
 const CardSection: React.FC<CardSectionProps> = ({ records, initialIndex }) => {
   const renderItem = ({ item }: { item: Record }) => (
     <View style={styles.card}>
-      <View style={styles.stressTextContainer}>
+      <View style={styles.emojiTextContainer}>
         {item.emoji !== undefined &&
-          <Text style={styles.stressText}>{item.emoji}</Text>
+          <Text style={styles.emojiText}>{item.emoji}</Text>
         }
       </View>
       <View style={styles.contentContainer}>
@@ -80,7 +80,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.1,
     shadowRadius: 4,
   },
-  stressTextContainer: {
+  emojiTextContainer: {
     position: 'absolute',
     top: SIZES.ultra,
     left: SIZES.ultra,
@@ -91,7 +91,7 @@ const styles = StyleSheet.create({
     backgroundColor: COLORS.primary,
     borderRadius: width * 0.5,
   },
-  stressText: {
+  emojiText: {
     width: 100,
     height: 100,
     fontSize: 45,
