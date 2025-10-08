@@ -32,7 +32,7 @@ export default function LoginScreen() {
 
       console.log("Supabase 세션 생성 완료:", result);
       Alert.alert("로그인 성공", "환영합니다!");
-      router.replace("/main");
+      router.replace("/onboarding/step1");
     } catch (err: any) {
       console.error("❌ 카카오 로그인 에러:", err);
       Alert.alert("로그인 실패", err.message);
