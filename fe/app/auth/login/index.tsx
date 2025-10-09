@@ -1,4 +1,5 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
 import { login } from "@react-native-seoul/kakao-login";
 import { router } from "expo-router";
 import { useState } from "react";
@@ -24,7 +25,7 @@ export default function LoginScreen() {
 
       // Supabase Edge Function 호출
       const res = await fetch(
-        "https://iewyffoogsqutukommtp.supabase.co/functions/v1/kakao-login",
+        "https://xvzgdwbssmuwsycwtlho.supabase.co/functions/v1/kakao-login",
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -33,12 +34,30 @@ export default function LoginScreen() {
       );
 
       const result = await res.json();
+      console.log("result:", result);
+
 
       if (!res.ok) {
         console.error("로그인 실패:", result);
         Alert.alert("로그인 실패", result.error || "서버 오류");
         return;
       }
+
+      // supabase 세션을 수동으로 등록
+      if (result.session) {
+        const { data, error } = await supabase.auth.setSession(result.session);
+        if (error) {
+          console.error("세션 저장 실패:", error);
+        } else {
+          console.log("Supabase 세션 저장 성공");
+        }
+      } else {
+        console.warn("result.session이 비어있음:", result);
+      }
+
+      // 디버깅용
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log("현재 세션:", session);
 
       setTimeout(() => {
         // router.replace("/onboarding/step1");
