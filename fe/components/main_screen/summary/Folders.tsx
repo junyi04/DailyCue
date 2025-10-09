@@ -3,6 +3,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image } from "react-native-elements";
 
 interface FolderProps {
   year: number;
@@ -15,14 +16,24 @@ const Folders: React.FC<FolderProps> = ({ year }) => {
   };
 
   const renderMonthItem = ({ item }: { item: number }) => (
-    <View style={{ alignItems: 'center' }}>
+    <View>
       <TouchableOpacity
         style={styles.monthFolder}
         onPress={() => handleMonthPress(item)}
       >
-        <Ionicons name="folder-open-sharp" size={100} color={COLORS.secondary} />
+        <Image
+          source={require('@/assets/images/folder.png')}
+          style={{
+            width: 50,
+            height: 50,
+          }}
+          tintColor={COLORS.secondary}
+        />
       </TouchableOpacity>
-      <Text style={styles.monthText}>{`${item + 1}월`}</Text>
+      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
+        <Text style={styles.monthText}>{`${item + 1}월`}</Text>
+        <Ionicons name="ellipsis-horizontal" style={{ marginTop: 10, marginHorizontal: 5 }} size={15}  />
+      </View>
     </View>
   );
 
@@ -34,6 +45,7 @@ const Folders: React.FC<FolderProps> = ({ year }) => {
       keyExtractor={(item) => item.toString()}
       numColumns={2}
       contentContainerStyle={styles.monthList}
+      columnWrapperStyle={styles.monthListColumn}
       showsVerticalScrollIndicator={false}
     />
   );
@@ -42,12 +54,10 @@ const Folders: React.FC<FolderProps> = ({ year }) => {
 
 const styles = StyleSheet.create({
   monthFolder: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 25,
     marginTop: SIZES.large,
     backgroundColor: COLORS.white,
-    paddingHorizontal: SIZES.medium,
+    paddingHorizontal: 55,
+    paddingVertical: 30,
     borderRadius: SIZES.medium,
     elevation: 2,
     shadowColor: '#000',
@@ -56,14 +66,19 @@ const styles = StyleSheet.create({
     shadowRadius: 2,
   },
   monthText: {
-    fontSize: 18,
+    fontSize: 17,
     fontWeight: "bold",
     color: "#222",
     marginBottom: 0,
-    marginTop: 5,
+    marginTop: 10,
+    marginHorizontal: 5,
   },
   monthList: {
     paddingBottom: 100,
+    alignItems: 'center',
+  },
+  monthListColumn: {
+    gap: 20,
   },
 });
 export default Folders;

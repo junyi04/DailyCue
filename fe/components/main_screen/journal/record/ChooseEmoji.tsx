@@ -5,8 +5,8 @@ import Carousel from "react-native-reanimated-carousel";
 
 
 const { width: screenWidth } = Dimensions.get('window');
-const ITEM_WIDTH = screenWidth * 0.5;
-const ITEM_HEIGHT = ITEM_WIDTH * 1.2;
+const ITEM_WIDTH = screenWidth * 0.45;
+const ITEM_HEIGHT = ITEM_WIDTH * 1.1;
 
 interface ChooseEmojiProps {
   selectedEmoji: Record['emoji'] | null;
@@ -20,7 +20,7 @@ const ChooseEmotion: React.FC<ChooseEmojiProps> = ({ selectedEmoji, onSelectEmoj
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>오늘의 기분은 어떠신가요?</Text>
+      <Text style={styles.title}>오늘 하루를 돌아보며..</Text>
 
       <Carousel
         loop={false}
@@ -49,7 +49,7 @@ const ChooseEmotion: React.FC<ChooseEmojiProps> = ({ selectedEmoji, onSelectEmoj
         }}
         mode="parallax"
         modeConfig={{
-          parallaxScrollingScale: 0.8, // 비활성 아이템 크기
+          parallaxScrollingScale: 0.75, // 비활성 아이템 크기
           parallaxScrollingOffset: 50, // 아이템 간 간격
         }}
       />
@@ -91,7 +91,6 @@ const styles = StyleSheet.create({
     transform: [{ scale: 1.1 }],
     elevation: 10,
     shadowOpacity: 0.2,
-    backgroundColor: 'ff1',
   },
   emojiText: {
     fontSize: ITEM_WIDTH * 0.5,

@@ -1,7 +1,10 @@
+import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressBar from '../../components/onboarding/ProgressBar';
+
 
 const Step2 = () => {
   const router = useRouter();
@@ -11,16 +14,55 @@ const Step2 = () => {
 
   const ageGroups = ['20대', '30대', '40대', '50대', '60대 이상'];
 
-  const handleNext = () => {
-    if (nickname.trim() && gender && ageGroup) {
-      router.push('/onboarding/step3');
+  const handleNext = async () => {
+    if (!nickname.trim() && gender && ageGroup) {
+      return;
+    }
+
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) {
+        Alert.alert("로그인이 필요합니다.");
+        return;
+      }
+
+      // 백엔드 API 호출 HTTP 요청
+      const response = await fetch("API_URL", {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json" ,
+          Authorization: `Bearer ${user.id}`,
+        },
+        body: JSON.stringify({
+          nickname,
+          gender,
+          ageGroup,
+        }),
+      });
+
+      // 서버가 보낸 응답을 JSON으로 해석
+      const result = await response.json();
+
+      if (!response.ok) {
+        console.error("프로필 저장 실패:", result);
+        Alert.alert("오류", "프로필 저장 중 문제 발생, 콘솔 확인 바람");
+        return;
+      }
+
+      console.log("프로필 저장 완료:", result);
+      router.push("/onboarding/step3");
+
+    } catch (error) {
+      console.error("프로필 저장 에러:", error);
+      Alert.alert("오류", "서버 통신 실패");
     }
   };
 
   const isFormValid = nickname.trim() && gender && ageGroup;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ProgressBar currentStep={2} totalSteps={3} />
 
       <ScrollView
@@ -126,7 +168,7 @@ const Step2 = () => {
           <Text style={styles.nextButtonText}>다음 &gt;</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 
@@ -137,7 +179,7 @@ const styles = StyleSheet.create({
   },
   content: {
     padding: 24,
-    paddingTop: 40,
+    paddingTop: 30,
   },
   header: {
     marginBottom: 40,
@@ -147,7 +189,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: '#1A1A1A',
     marginBottom: 16,
-    lineHeight: 28,
+    lineHeight: 30,
   },
   subtitle: {
     fontSize: 13,
@@ -155,16 +197,16 @@ const styles = StyleSheet.create({
     color: '#666666',
   },
   formContainer: {
-    marginBottom: 32,
+    marginBottom: 20,
   },
   inputGroup: {
-    marginBottom: 28,
+    marginBottom: 20,
   },
   label: {
     fontSize: 16,
     fontWeight: '600',
     color: '#1A1A1A',
-    marginBottom: 12,
+    marginBottom: 10,
   },
   input: {
     borderWidth: 1,
@@ -232,7 +274,7 @@ const styles = StyleSheet.create({
     fontSize: 12,
     lineHeight: 18,
     color: '#999999',
-    marginTop: 12,
+    marginTop: 10,
   },
   nextButton: {
     backgroundColor: '#1E40AF',
@@ -240,7 +282,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 12,
     alignItems: 'center',
-    marginTop: 20,
   },
   nextButtonDisabled: {
     backgroundColor: '#CCCCCC',

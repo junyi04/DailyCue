@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressBar from '../../components/onboarding/ProgressBar';
 
 const Step3 = () => {
@@ -12,7 +13,7 @@ const Step3 = () => {
   };
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ProgressBar currentStep={3} totalSteps={3} />
 
       <ScrollView
@@ -35,7 +36,7 @@ const Step3 = () => {
           <Text style={styles.completeButtonText}>시작하기</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

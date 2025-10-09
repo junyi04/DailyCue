@@ -3,9 +3,10 @@ import { router } from "expo-router";
 import { useEffect } from "react";
 import { Image, StyleSheet, Text, View } from "react-native";
 
+
 export default function SplashScreen() {
   useEffect(() => {
-    // ✅ 1.5초 후 바로 로그인 화면으로 이동
+    // 1.5초 후 바로 로그인 화면으로 이동
     const timer = setTimeout(() => {
       router.replace("/auth/login");
     }, 1500);

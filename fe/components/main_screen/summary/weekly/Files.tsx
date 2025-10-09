@@ -1,3 +1,4 @@
+import { COLORS, SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import React from "react";
@@ -27,12 +28,29 @@ const Files: React.FC = () => {
 
   const renderItem = ({ item }: { item: number | string }) => (
     <View style={{ alignItems: "center" }}>
-      <TouchableOpacity style={styles.weekFolder} onPress={() => handlePress(item)}>
-        <Ionicons name="document-text-outline" size={100} color={"#444"} />
-      </TouchableOpacity>
-      <Text style={styles.weekText}>
-        {item === "all" ? "전체" : `${item}주차`}
-      </Text>
+      {item === "all"
+        ? (
+          <>
+            <TouchableOpacity
+              style={[styles.weekFolder, { backgroundColor: COLORS.secondary }]}
+              onPress={() => handlePress(item)}
+              >
+              <Ionicons name="document-text-outline" size={50} color={COLORS.white} />
+            </TouchableOpacity>
+            <Text style={styles.weekText}>전체</Text>
+          </>
+        ) : (
+          <>
+            <TouchableOpacity
+              style={styles.weekFolder}
+              onPress={() => handlePress(item)}
+              >
+              <Ionicons name="document-text-outline" size={50} color={"#444"} />
+            </TouchableOpacity>
+            <Text style={styles.weekText}>{item}주차</Text>
+          </>
+        )
+      }
     </View>
   );
 
@@ -43,6 +61,7 @@ const Files: React.FC = () => {
       keyExtractor={(item) => item.toString()}
       numColumns={2}
       contentContainerStyle={styles.weekList}
+      columnWrapperStyle={styles.weekListColumn}
       showsVerticalScrollIndicator={false}
     />
   );
@@ -50,19 +69,31 @@ const Files: React.FC = () => {
 
 const styles = StyleSheet.create({
   weekFolder: {
-    justifyContent: "center",
-    alignItems: "center",
-    marginHorizontal: 30,
-    marginTop: 10,
+    marginTop: SIZES.large,
+    backgroundColor: COLORS.white,
+    paddingHorizontal: 55,
+    paddingVertical: 30,
+    borderRadius: SIZES.medium,
+    elevation: 2,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
   },
   weekText: {
-    fontSize: 16,
+    fontSize: 17,
     fontWeight: "bold",
-    color: "#333",
-    marginBottom: 20,
+    color: "#222",
+    marginBottom: 0,
+    marginTop: 10,
+    marginHorizontal: 5,
   },
   weekList: {
     paddingBottom: 100,
+    alignItems: 'center',
+  },
+  weekListColumn: {
+    gap: 20,
   },
 });
 

@@ -2,7 +2,7 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { router, useNavigation } from "expo-router";
+import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "react-native-elements";
 
@@ -20,14 +20,9 @@ const HeadScreen = () => {
       </View>
       <View style={styles.body}>
         <View style={styles.leftBody}>
-          <Text style={[styles.text2, { lineHeight: 45 }]}>
+          <Text style={[styles.text2, { lineHeight: 50 }]}>
             데일리큐로{'\n'}기록하고{'\n'}서로 공유해요!
           </Text>
-
-          {/* <TouchableOpacity style={styles.goChat} onPress={() => router.push('/main/record')}>
-            <Ionicons name="receipt-outline" size={SIZES.medium} color={COLORS.secondary} />
-            <Text style={styles.text3}>기록하기</Text>
-          </TouchableOpacity> */}
         </View>
         <View style={styles.rightBody}>
           <Image
@@ -43,14 +38,14 @@ const HeadScreen = () => {
 const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
-    marginHorizontal: 30,
-    marginTop: 50,
-    marginBottom: 30,
+    marginHorizontal: 35,
+    marginTop: 60,
+    marginBottom: 35,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
   text1: {
-    fontSize: 22,
+    fontSize: 23,
     fontWeight: 'bold',
     color: COLORS.darkBlueGray,
   },
@@ -64,7 +59,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   leftBody: {
-    marginLeft: 30,
+    marginLeft: 35,
   },
   rightBody: {
     flex: 1,
@@ -72,9 +67,9 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   text2: {
-    fontSize: 27,
-    fontWeight: '500',
+    fontSize: 25,
     color: COLORS.white,
+    fontFamily: 'homeFont',
   },
   goChat: {
     flexDirection: 'row',
