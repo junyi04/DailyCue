@@ -8,7 +8,7 @@ export interface Post {
   like_count: number;
   comment_count: number;
   views: number;
-  created_at: string;
+  created_at?: string;
 }
 
 // AI 챗봇 메시지 타입

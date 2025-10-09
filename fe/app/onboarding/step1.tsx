@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
 import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressBar from '../../components/onboarding/ProgressBar';
 
 type Agreement = {
@@ -39,7 +40,7 @@ const Step1 = () => {
   const isFormValid = agreements.terms && agreements.privacy;
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <ProgressBar currentStep={1} totalSteps={3} />
 
       <ScrollView
@@ -53,7 +54,7 @@ const Step1 = () => {
           <Text style={styles.description}>
             DailyCue는 돌봄으로 분주한 일상 속,{'\n'}
             잠시 멈춰 나의 마음을 돌볼 수 있도록 돕는{'\n'}
-            보호자를 위한 마음 치유 앱입니다
+            보호자를 위한 마음 치유 앱입니다.
           </Text>
         </View>
 
@@ -94,7 +95,7 @@ const Step1 = () => {
           <Text style={styles.nextButtonText}>다음 &gt;</Text>
         </TouchableOpacity>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 };
 

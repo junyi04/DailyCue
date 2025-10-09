@@ -1,7 +1,6 @@
 import ChooseTag from "@/components/main_screen/community/write_post/ChooseTag";
 import WriteBox from "@/components/main_screen/community/write_post/WriteBox";
 import { COLORS, SIZES } from "@/constants/theme";
-import { createPost } from '@/services/postService';
 import { Post } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -21,33 +20,33 @@ export default function WritePostScreen() {
       return;
     }
 
-    // 로그인 구현 전 supabase에서 가져온 테스트용 유저 id
-    const TEST_USER_ID = "c5c5a14b-1b8a-4c2d-8f3f-123456789abc";
-    const newPost: Omit<Post, "id"> = {
-      tag,
-      title,
-      content,
-      user_id: TEST_USER_ID,
-      like_count: 0,
-      comment_count: 0,
-      views: 0,
-      created_at: new Date().toISOString(),
-    };
+    // // 로그인 구현 전 supabase에서 가져온 테스트용 유저 id
+    // const TEST_USER_ID = "c5c5a14b-1b8a-4c2d-8f3f-123456789abc";
+    // const newPost: Omit<Post, "id"> = {
+    //   tag,
+    //   title,
+    //   content,
+    //   user_id: TEST_USER_ID,
+    //   like_count: 0,
+    //   comment_count: 0,
+    //   views: 0,
+    //   created_at: new Date().toISOString(),
+    // };
 
-    try {
-      // createPost 호출: 백엔드에 게시글 저장
-      const savedPost = await createPost(newPost);
-      console.log("Post created successfully:", savedPost);
+    // try {
+    //   // createPost 호출: 백엔드에 게시글 저장
+    //   const savedPost = await createPost(newPost);
+    //   console.log("Post created successfully:", savedPost);
 
-      // 게시글 저장 후 게시판 화면으로 이동
-      router.push({
-        pathname: "/main/community",
-        params: { post: JSON.stringify(savedPost) },
-      });
-    } catch (error) {
-      console.error("Error saving post:", error);
-      alert(`게시글 저장에 실패했습니다. 에러: ${error}`);
-    }
+    //   // 게시글 저장 후 게시판 화면으로 이동
+    //   router.push({
+    //     pathname: "/main/community",
+    //     params: { post: JSON.stringify(savedPost) },
+    //   });
+    // } catch (error) {
+    //   console.error("Error saving post:", error);
+    //   alert(`게시글 저장에 실패했습니다. 에러: ${error}`);
+    // }
   };
 
   return (

@@ -1,4 +1,4 @@
-import { COLORS, FONTS } from '@/constants/theme';
+import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { FontAwesome6 } from '@expo/vector-icons';
 import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
@@ -31,21 +31,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 30,
+    paddingVertical: 15,
+    marginHorizontal: 20,
+    marginBottom: 20,
+    backgroundColor: COLORS.secondary,
+    borderRadius: SIZES.medium,
   },
   arrowButton: {
     paddingHorizontal: 20,
   },
   arrowText: {
     ...FONTS.h3,
-    color: COLORS.darkGray,
+    color: COLORS.white,
   },
   dateText: {
-    ...FONTS.h3,
+    fontSize: 17,
     fontWeight: 'bold',
-    color: COLORS.black,
     width: 120,
     textAlign: 'center',
+    color: COLORS.white,
   },
 });
 

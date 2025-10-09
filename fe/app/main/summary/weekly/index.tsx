@@ -1,5 +1,6 @@
 import Files from "@/components/main_screen/summary/weekly/Files";
-import { FONTS, SIZES } from "@/constants/theme";
+import Header from "@/components/main_screen/summary/weekly/Header";
+import { SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -21,6 +22,7 @@ export default function WeeklyScreen() {
       <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
         <Ionicons name="chevron-back" size={25} /> 
       </TouchableOpacity>
+      <Header />
       {/* 해당 월의 주 파일 */}
       <Text style={styles.text}>{`${year}년 ${Number(month) + 1}월 주간 리포트`}</Text>
       {/* 해당 주간 파일들 */}
@@ -43,9 +45,8 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   text: {
-    ...FONTS.h2,
-    textAlign: 'center',
+    fontSize: 20,
     fontWeight: 'bold',
-    paddingVertical: SIZES.mega,
+    paddingHorizontal: 30,
   }
 })
