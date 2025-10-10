@@ -7,49 +7,44 @@ import { supabase } from '@/lib/supabaseClient';
 import { Post } from '@/types';
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useLocalSearchParams, useRouter } from "expo-router";
-import React, { useEffect, useState } from 'react';
+import { useFocusEffect, useRouter } from "expo-router";
+import React, { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function CommunityScreen() {
-  const { post } = useLocalSearchParams<{ post?: string }>();
-  const parsedPost: Post | null = post ? JSON.parse(post) : null;
-
-  // console.log("Parsed Post:", parsedPost);
-  // console.log("Post param:", post); 
-
-  // 기존 post + 새 글 합치기
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
 
-  // supabase에서 데이터 가져오기
-  useEffect(() => {
-    const fetchPosts = async () => {
-      const { data, error } = await supabase
-        .from('posts_with_details')
-        .select('*')
-        .order('created_at', { ascending: false });
+  // posts 데이터 가져오기
+  useFocusEffect(
+    useCallback(() => {
+      const fetchPosts = async () => {
+        try {
+          let query = supabase
+            .from('posts')
+            .select('*')
+            .order('created_at', { ascending: false });
+          
+          if (activeTag !== "전체") {
+            query = query.eq('tag', activeTag);
+          }
 
-      if (error) {
-        console.error('Error fetching posts:', error.message);
-        return;
-      }
+          const { data, error } = await query;
 
-      console.log("Fetched data:", data); 
+          if (error) throw error;
 
-      const allPosts = parsedPost ? [parsedPost, ...(data ?? [])] : (data ?? []);
-      const filteredPosts = activeTag === "전체"
-        ? allPosts
-        : allPosts.filter(post => post.tag === activeTag);
+          setPosts(data || []);
+          // console.log("Fetched posts:", data);
+        } catch (err: any) {
+          console.error("게시글 불러오기 실패:", err.message);
+        }
+      };
 
-      console.log("Filtered posts:", filteredPosts); 
-      setPosts(filteredPosts);
-    };
-
-    fetchPosts();
-  }, [activeTag, parsedPost]);
-
+      fetchPosts();
+    }, [activeTag])
+  );
+  
   const router = useRouter();
 
   return (
@@ -67,15 +62,15 @@ export default function CommunityScreen() {
       <SearchBox />
       <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
 
-      {/* 추천 글 */}
-      <Board activeTag={activeTag} posts={posts} />
-
       {/* 일반 게시글 */}
       <FlatList
         data={posts}
         renderItem={({ item }) => <CommunityPost post={item} />}
-        keyExtractor={item => item.id}
+        keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ paddingVertical: SIZES.medium }}
+        ListHeaderComponent={
+          <Board activeTag={activeTag} posts={posts} />
+        } 
       />
 
       <TouchableOpacity

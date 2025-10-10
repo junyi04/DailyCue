@@ -1,15 +1,67 @@
-import { useRouter } from 'expo-router';
+import { supabase } from '@/lib/supabase';
+import { useLocalSearchParams, useRouter } from 'expo-router';
 import React from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressBar from '../../components/onboarding/ProgressBar';
 
 const Step3 = () => {
   const router = useRouter();
 
-  const handleComplete = () => {
-    // 메인 화면으로 이동
-    router.replace('/main');
+  const { nickname, gender, ageRange } = useLocalSearchParams<{
+    nickname: string;
+    gender: string;
+    ageRange: string;
+  }>();
+
+  const handleSaveProfile = async () => {
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    if (userError || !user) {
+      Alert.alert("오류", "로그인 정보를 확인할 수 없습니다.");
+      return;
+    }
+
+    // 기존 프로필이 있는지 확인
+    const { data: existingProfile } = await supabase
+      .from("profiles")
+      .select("*")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    // 없다면 생성 및 업데이트
+    if (!existingProfile) {
+      const { error: insertError } = await supabase.from("profiles").insert({
+        id: user.id,
+        nickname,
+        gender,
+        age_range: ageRange,
+      });
+
+      if (insertError) {
+        console.error(insertError);
+        Alert.alert("프로필 저장 실패", insertError.message);
+        return;
+      }
+    } else {
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({
+          nickname,
+          gender,
+          age_range: ageRange,
+          updated_at: new Date(),
+        })
+        .eq("id", user.id);
+
+      if (updateError) {
+        console.error(updateError);
+        Alert.alert("프로필 업데이트 실패", updateError.message);
+        return;
+      }
+    }
+
+    Alert.alert("완료", "프로필이 저장되었습니다!");
+    router.replace("/main");
   };
 
   return (
@@ -30,7 +82,7 @@ const Step3 = () => {
 
         <TouchableOpacity
           style={styles.completeButton}
-          onPress={handleComplete}
+          onPress={handleSaveProfile}
           activeOpacity={0.8}
         >
           <Text style={styles.completeButtonText}>시작하기</Text>
