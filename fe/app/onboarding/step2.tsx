@@ -1,7 +1,6 @@
-import { supabase } from '@/lib/supabase';
 import { useRouter } from 'expo-router';
 import React, { useState } from 'react';
-import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import ProgressBar from '../../components/onboarding/ProgressBar';
 
@@ -10,56 +9,25 @@ const Step2 = () => {
   const router = useRouter();
   const [nickname, setNickname] = useState('');
   const [gender, setGender] = useState<'male' | 'female' | null>(null);
-  const [ageGroup, setAgeGroup] = useState<string | null>(null);
+  const [ageRange, setAgeRange] = useState<string | null>(null);
 
   const ageGroups = ['20대', '30대', '40대', '50대', '60대 이상'];
 
   const handleNext = async () => {
-    if (!nickname.trim() && gender && ageGroup) {
+    if (!nickname.trim() && gender && ageRange) {
       return;
     }
-
-    try {
-      const { data: { user } } = await supabase.auth.getUser();
-
-      if (!user) {
-        Alert.alert("로그인이 필요합니다.");
-        return;
+    router.push({
+      pathname: "/onboarding/step3",
+      params: {
+        nickname,
+        gender,
+        ageRange,
       }
-
-      // 백엔드 API 호출 HTTP 요청
-      const response = await fetch("API_URL", {
-        method: "POST",
-        headers: { 
-          "Content-Type": "application/json" ,
-          Authorization: `Bearer ${user.id}`,
-        },
-        body: JSON.stringify({
-          nickname,
-          gender,
-          ageGroup,
-        }),
-      });
-
-      // 서버가 보낸 응답을 JSON으로 해석
-      const result = await response.json();
-
-      if (!response.ok) {
-        console.error("프로필 저장 실패:", result);
-        Alert.alert("오류", "프로필 저장 중 문제 발생, 콘솔 확인 바람");
-        return;
-      }
-
-      console.log("프로필 저장 완료:", result);
-      router.push("/onboarding/step3");
-
-    } catch (error) {
-      console.error("프로필 저장 에러:", error);
-      Alert.alert("오류", "서버 통신 실패");
-    }
+    })
   };
 
-  const isFormValid = nickname.trim() && gender && ageGroup;
+  const isFormValid = nickname.trim() && gender && ageRange;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -134,14 +102,14 @@ const Step2 = () => {
                   key={age}
                   style={[
                     styles.ageButton,
-                    ageGroup === age && styles.ageButtonSelected
+                    ageRange === age && styles.ageButtonSelected
                   ]}
-                  onPress={() => setAgeGroup(age)}
+                  onPress={() => setAgeRange(age)}
                   activeOpacity={0.7}
                 >
                   <Text style={[
                     styles.ageButtonText,
-                    ageGroup === age && styles.ageButtonTextSelected
+                    ageRange === age && styles.ageButtonTextSelected
                   ]}>
                     {age}
                   </Text>

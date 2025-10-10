@@ -12,16 +12,12 @@ export default function LoginScreen() {
 
   const handleKakaoLogin = async () => {
     try {
-      // 로그인 시작 시 로딩 ON
       setIsLoading(true);
 
       // Kakao SDK 로그인
       const token = await login();
-
-      console.log("token object:", token);
       console.log("Access Token:", token.accessToken);
-      console.log("ID Token:", token.idToken);
-
+      console.log(token.idToken);
 
       // Supabase Edge Function 호출
       const res = await fetch(
@@ -29,45 +25,48 @@ export default function LoginScreen() {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accessToken: token.accessToken }),
+          body: JSON.stringify({ idToken: token.idToken }),
         }
       );
 
-      const result = await res.json();
-      console.log("result:", result);
-
+      // 응답 파싱
+      const session = await res.json();
+      console.log("Supabase Session:", session);
 
       if (!res.ok) {
-        console.error("로그인 실패:", result);
-        Alert.alert("로그인 실패", result.error || "서버 오류");
+        console.error("로그인 실패:", session);
+        Alert.alert("로그인 실패", session.error || "서버 오류");
         return;
       }
 
-      // supabase 세션을 수동으로 등록
-      if (result.session) {
-        const { data, error } = await supabase.auth.setSession(result.session);
+      // 세션 저장
+      if (session?.access_token && session?.refresh_token) {
+        const { data, error } = await supabase.auth.setSession({
+          access_token: session.access_token,
+          refresh_token: session.refresh_token,
+        });
+
         if (error) {
-          console.error("세션 저장 실패:", error);
-        } else {
-          console.log("Supabase 세션 저장 성공");
+          console.error("세션 설정 실패:", error);
+          Alert.alert("로그인 실패", error.message);
+          return;
         }
+
+        console.log("✅ 세션 등록 완료:", data.session);
       } else {
-        console.warn("result.session이 비어있음:", result);
+        console.error("세션 토큰이 없습니다:", session);
+        Alert.alert("로그인 실패", "세션 토큰을 받지 못했습니다.");
+        return;
       }
 
-      // 디버깅용
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("현재 세션:", session);
-
-      setTimeout(() => {
-        // router.replace("/onboarding/step1");
-        router.replace("/main");
-        setIsLoading(false);
-      }, 500);
+      // 로그인 성공 후 이동
+      router.replace("/onboarding/step1");
 
     } catch (err: any) {
-      console.error("❌ 카카오 로그인 에러:", err);
+      console.error("카카오 로그인 에러:", err);
       Alert.alert("로그인 실패", err.message);
+    } finally {
+      setIsLoading(false);
     }
   };
 
