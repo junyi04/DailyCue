@@ -1,11 +1,12 @@
 import ChooseTag from "@/components/main_screen/community/write_post/ChooseTag";
 import WriteBox from "@/components/main_screen/community/write_post/WriteBox";
 import { COLORS, SIZES } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
 import { Post } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Alert, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 
 export default function WritePostScreen() {
   const router = useRouter();
@@ -20,33 +21,30 @@ export default function WritePostScreen() {
       return;
     }
 
-    // // 로그인 구현 전 supabase에서 가져온 테스트용 유저 id
-    // const TEST_USER_ID = "c5c5a14b-1b8a-4c2d-8f3f-123456789abc";
-    // const newPost: Omit<Post, "id"> = {
-    //   tag,
-    //   title,
-    //   content,
-    //   user_id: TEST_USER_ID,
-    //   like_count: 0,
-    //   comment_count: 0,
-    //   views: 0,
-    //   created_at: new Date().toISOString(),
-    // };
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
 
-    // try {
-    //   // createPost 호출: 백엔드에 게시글 저장
-    //   const savedPost = await createPost(newPost);
-    //   console.log("Post created successfully:", savedPost);
+      const { data, error } = await supabase
+        .from("posts")
+        .insert([
+          {
+            user_id: user.id,
+            tag: tag,
+            title: title,
+            content: content,
+          },
+        ]);
 
-    //   // 게시글 저장 후 게시판 화면으로 이동
-    //   router.push({
-    //     pathname: "/main/community",
-    //     params: { post: JSON.stringify(savedPost) },
-    //   });
-    // } catch (error) {
-    //   console.error("Error saving post:", error);
-    //   alert(`게시글 저장에 실패했습니다. 에러: ${error}`);
-    // }
+      if (error) throw error;
+
+      Alert.alert("게시글이 저정 완료", "게시글을 확인해보세요!");
+      router.push("/main/community");
+
+    } catch (err: any) {
+      console.error("게시글 저장 실패:", err.message);
+      Alert.alert("게시글 저장 실패");
+    }
   };
 
   return (
