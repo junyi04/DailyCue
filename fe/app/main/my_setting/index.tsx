@@ -4,7 +4,7 @@ import React, { useEffect, useState } from 'react';
 import { Alert, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-export default function Setting() {
+export default function SettingScreen() {
   const [profile, setProfile] = useState<{
     nickname: string;
     gender: string;
@@ -141,8 +141,6 @@ export default function Setting() {
             </TouchableOpacity>
           </View>
         </View>
-
-
 
         {/* 추가 메뉴 섹션 */}
         <View style={styles.cardSection}>

@@ -16,8 +16,10 @@ export default function LoginScreen() {
 
       // Kakao SDK 로그인
       const token = await login();
-      console.log("Access Token:", token.accessToken);
-      console.log(token.idToken);
+      // console.log("Access Token:", token.accessToken);
+      // console.log("Id Token:", token.idToken);
+      console.log("Access Token success");
+      console.log("Id Token success");
 
       // Supabase Edge Function 호출
       const res = await fetch(
@@ -31,7 +33,8 @@ export default function LoginScreen() {
 
       // 응답 파싱
       const session = await res.json();
-      console.log("Supabase Session:", session);
+      // console.log("Supabase Session:", session);
+      console.log("Supabase Session success");
 
       if (!res.ok) {
         console.error("로그인 실패:", session);
@@ -52,7 +55,8 @@ export default function LoginScreen() {
           return;
         }
 
-        console.log("✅ 세션 등록 완료:", data.session);
+        // console.log("✅ 세션 등록 완료:", data.session);
+        console.log("✅ 세션 등록 완료");
       } else {
         console.error("세션 토큰이 없습니다:", session);
         Alert.alert("로그인 실패", "세션 토큰을 받지 못했습니다.");

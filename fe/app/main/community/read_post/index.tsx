@@ -1,4 +1,4 @@
-// import PostDetail from "@/components/main_screen/community/read_post/PostDetail";
+import PostDetail from "@/components/main_screen/community/read_post/PostDetail";
 import { COLORS, SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -17,7 +17,7 @@ export default function ReadPostScreen() {
             {/* <MoreIcon /> */}
         </TouchableOpacity>
       </View>
-      {/* <PostDetail /> */}
+      <PostDetail />
     </View>
   );
 }

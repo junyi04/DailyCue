@@ -16,13 +16,13 @@ export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
 
-  // posts 데이터 가져오기
+  // posts_with_details 데이터 가져오기
   useFocusEffect(
     useCallback(() => {
       const fetchPosts = async () => {
         try {
           let query = supabase
-            .from('posts')
+            .from('posts_with_details')
             .select('*')
             .order('created_at', { ascending: false });
           

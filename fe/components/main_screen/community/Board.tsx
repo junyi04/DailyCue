@@ -1,6 +1,7 @@
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { supabase } from "@/lib/supabase";
 import { Post } from "@/types";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import HotIssue from "./HotIssue";
 
@@ -11,12 +12,34 @@ interface BoardProps {
 
 const Board: React.FC<BoardProps> = ({ activeTag, posts }) => {
   const filteredPosts = activeTag === "전체" ? posts : posts.filter(post => post.tag === activeTag);
+  const [nickname, setNickname] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchNickname = async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', user.id)
+          .single();
+          
+        if (error) {
+          console.error('닉네임 불러오기 실패:', error.message);
+        } else {
+          setNickname(data?.nickname);
+        }
+      }
+    };
+
+    fetchNickname();
+  }, []);
 
   return (
     <View>
       {activeTag === "전체" && (
         <>
-          <HotIssue posts={filteredPosts.slice(0, 4)} />
+          <HotIssue posts={filteredPosts.slice(0, 4)} name={nickname} />
           <View style={{ borderWidth: 0.2, marginHorizontal: SIZES.medium, borderColor: COLORS.lightGray }}></View>
         </>
       )}

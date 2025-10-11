@@ -5,6 +5,7 @@ export interface Post {
   tag: '전체' | '공유해요' | '공감원해요' | '함께해요' | '고수찾아요';
   title: string;
   content: string;
+  author: string;
   views: number;
   like_count: number;
   comment_count: number;
