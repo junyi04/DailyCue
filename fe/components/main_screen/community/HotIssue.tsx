@@ -12,34 +12,57 @@ interface CommunityPostProps {
 }
 
 const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
-  const [viewCount, setViewCount] = useState<number>(0);
+  const [topPosts, setTopPosts] = useState<Post[]>([]);
 
-  // 게시글 클릭 시 상세 페이지로 이동
-  const handlePostPress = async (post: Post) => {
-    await supabase
-      .from('posts_with_details')
-      .update({ view: post.views + 1 })  // 조회수 1 증가
-      .eq('id', post.id);
-
-    // 상세 페이지로 이동
-    router.push({
-      pathname: "/main/community/read_post",
-      params: { post: JSON.stringify(post) }
-    });
-  };
-
-  // 화면에 보여지는 게시글들의 조회수 설정
   useEffect(() => {
-    if (posts.length > 0) {
-      setViewCount(posts[0].views);
+    // views가 가장 많은 게시글 5개를 가져오는 쿼리
+    const fetchTopPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('posts_with_details')
+          .select('*')
+          .order('views', { ascending: false })  // views를 기준으로 내림차순 정렬
+          .limit(5);  // 상위 5개 게시글 가져오기
+
+        if (error) {
+          console.error('Error fetching top posts:', error.message);
+        } else {
+          setTopPosts(data || []); // 가져온 데이터를 상태에 저장
+        }
+      } catch (error) {
+        console.error('Error fetching top posts:', error);
+      }
+    };
+
+    fetchTopPosts(); // 컴포넌트 마운트 시 데이터 가져오기
+  }, []);
+
+  const handlePostPress = async (post: Post) => {
+    try {
+      // 조회수 증가
+      await supabase
+        .from('posts_with_details')
+        .update({ views: post.views + 1 })
+        .eq('id', post.id);
+
+      // 상세 페이지로 이동
+      router.push({
+        pathname: "/main/community/read_post",
+        params: { post: JSON.stringify(post) }
+      });
+
+      // 화면에 반영을 위해 상태 업데이트
+      setTopPosts(topPosts.map(item => item.id === post.id ? { ...item, views: post.views + 1 } : item));
+    } catch (error) {
+      console.error('Error updating views:', error);
     }
-  }, [posts]);
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{name}님께 추천드리는 큐픽 🔥</Text>
       <FlatList
-        data={posts}
+        data={topPosts}
         horizontal
         contentContainerStyle={{ paddingBottom: 20 }}
         keyExtractor={(item) => item.id}

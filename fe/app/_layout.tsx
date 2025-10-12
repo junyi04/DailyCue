@@ -1,4 +1,3 @@
-import { NicknameProvider } from "@/context/NicknameContext";
 import { useFonts } from "expo-font";
 import { Stack } from "expo-router";
 import { ActivityIndicator, View } from "react-native";
@@ -26,9 +25,9 @@ export default function RootLayout() {
   }
 
   return (
-    <NicknameProvider>
-      <Stack screenOptions={{ headerShown: false, animation: "none" }}>
-      </Stack>
-    </NicknameProvider>
+
+    <Stack screenOptions={{ headerShown: false, animation: "none" }}>
+    </Stack>
+
   );
 }

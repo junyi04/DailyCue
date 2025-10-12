@@ -1,9 +1,10 @@
 import { getTagColor } from '@/constants/tagColor';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
+import { supabase } from '@/lib/supabase';
 import { Post } from '@/types';
 import { EvilIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CommunityPostProps {
@@ -11,27 +12,45 @@ interface CommunityPostProps {
 }
 
 const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
+  const [currentPost, setCurrentPost] = useState<Post>(post);
+  const [error, setError] = useState(null);
 
-  // 클릭 시 상세 페이지로 이동
-  const handlePostPress = (post: Post) => {
-    // 상세 페이지로 이동
-    router.push({
-      pathname: "/main/community/read_post",
-      params: { post: JSON.stringify(post) }
-    });
+  const handlePostPress = async (post: Post) => {
+    try {
+      // views 값 증가
+      await supabase
+        .from('posts_with_details')
+        .update({ views: post.views + 1 })
+        .eq('id', post.id);
+
+      // 상세 페이지로 이동
+      router.push({
+        pathname: "/main/community/read_post",
+        params: { post: JSON.stringify(post) }
+      });
+
+      // 화면에 반영을 위해 상태 업데이트
+      setCurrentPost({ ...post, views: post.views + 1 }); // views 증가 후 상태 반영
+    } catch (err: any) {
+      console.error("에러:", err.message);
+    }
   };
+
+  if (error) {
+    return <Text>{error}</Text>;
+  }
 
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => handlePostPress(post)} // 클릭 시 상세 페이지로 이동
+      onPress={() => handlePostPress(currentPost)}
     >
-      <View style={[styles.tag, { backgroundColor: getTagColor(post.tag) }]}>
-        <Text style={styles.tagText}>{post.tag}</Text>
+      <View style={[styles.tag, { backgroundColor: getTagColor(currentPost.tag) }]}>
+        <Text style={styles.tagText}>{currentPost.tag}</Text>
       </View>
-      <Text style={styles.title}>{post.title}</Text>
-      <Text style={styles.content} numberOfLines={2}>{post.content}</Text>
-      <Text style={styles.author}>by {post.author || '익명'}</Text>
+      <Text style={styles.title}>{currentPost.title}</Text>
+      <Text style={styles.content} numberOfLines={2}>{currentPost.content}</Text>
+      <Text style={styles.author}>by {currentPost.author || '익명'}</Text>
       <View style={styles.viewContainer}>
         <View style={styles.statItem}>
           <EvilIcons name="like" size={15} />
@@ -41,7 +60,7 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
         </View>
         <View style={styles.statItem}>
           <Ionicons name="eye-outline" size={14} />
-          <Text style={styles.statText}>{post.views}</Text>
+          <Text style={styles.statText}>{currentPost.views}</Text>
         </View>
       </View>
     </TouchableOpacity>
