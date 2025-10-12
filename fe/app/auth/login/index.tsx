@@ -118,13 +118,11 @@ export default function LoginScreen() {
       {/* 로그인 / 회원 가입 */}
       <View style={styles.primaryActions}>
         <TouchableOpacity
-          style={[styles.primaryBtn, styles.loginBtn]}
-          onPress={() => router.push("/main")}>
+          style={[styles.primaryBtn, styles.loginBtn]}>
           <Text style={styles.primaryText}>로그인</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={[styles.primaryBtn, styles.signupBtn]}
-          onPress={() => router.push("/auth/register")}
         >
           <Text style={styles.signupText}>회원 가입</Text>
         </TouchableOpacity>

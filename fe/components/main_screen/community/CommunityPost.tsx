@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { Post } from '@/types';
 import { EvilIcons, FontAwesome, Ionicons } from '@expo/vector-icons';
 import { router } from 'expo-router';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 
 interface CommunityPostProps {
@@ -15,6 +15,26 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
   const [currentPost, setCurrentPost] = useState<Post>(post);
   const [error, setError] = useState(null);
 
+  // 데이터를 fetch하고 상태 업데이트
+  const fetchPostDetails = async (postId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('posts_with_details')
+        .select('*')
+        .eq('id', postId)
+        .single();
+
+      if (error) {
+        return;
+      }
+
+      setCurrentPost(data);  // 상태 업데이트
+    } catch (err: any) {
+      setError(err.message);
+    }
+  };
+
+  // views를 증가시키는 함수
   const handlePostPress = async (post: Post) => {
     try {
       // views 값 증가
@@ -23,18 +43,23 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
         .update({ views: post.views + 1 })
         .eq('id', post.id);
 
-      // 상세 페이지로 이동
+      // 데이터 갱신 후 화면 이동
+      fetchPostDetails(post.id);  // 데이터 새로고침
+
       router.push({
         pathname: "/main/community/read_post",
         params: { post: JSON.stringify(post) }
       });
-
-      // 화면에 반영을 위해 상태 업데이트
-      setCurrentPost({ ...post, views: post.views + 1 }); // views 증가 후 상태 반영
     } catch (err: any) {
       console.error("에러:", err.message);
     }
   };
+
+  useEffect(() => {
+    if (currentPost.id) {
+      fetchPostDetails(currentPost.id); // 처음 로드될 때 데이터 가져오기
+    }
+  }, [currentPost.id]);
 
   if (error) {
     return <Text>{error}</Text>;
@@ -54,9 +79,11 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
       <View style={styles.viewContainer}>
         <View style={styles.statItem}>
           <EvilIcons name="like" size={15} />
+          <Text style={styles.statText}>{currentPost.like_count}</Text>
         </View>
         <View style={styles.statItem}>
           <FontAwesome name="commenting-o" size={10} />
+          <Text style={styles.statText}>{currentPost.comment_count}</Text>
         </View>
         <View style={styles.statItem}>
           <Ionicons name="eye-outline" size={14} />

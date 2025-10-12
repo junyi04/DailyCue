@@ -15,26 +15,26 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
   const [topPosts, setTopPosts] = useState<Post[]>([]);
 
   useEffect(() => {
-    // views가 가장 많은 게시글 5개를 가져오는 쿼리
+    // views가 가장 많은 게시글 5개를 가져오기
     const fetchTopPosts = async () => {
       try {
         const { data, error } = await supabase
           .from('posts_with_details')
           .select('*')
-          .order('views', { ascending: false })  // views를 기준으로 내림차순 정렬
-          .limit(5);  // 상위 5개 게시글 가져오기
+          .order('views', { ascending: false })
+          .limit(5);
 
         if (error) {
           console.error('Error fetching top posts:', error.message);
         } else {
-          setTopPosts(data || []); // 가져온 데이터를 상태에 저장
+          setTopPosts(data || []);
         }
       } catch (error) {
         console.error('Error fetching top posts:', error);
       }
     };
 
-    fetchTopPosts(); // 컴포넌트 마운트 시 데이터 가져오기
+    fetchTopPosts();
   }, []);
 
   const handlePostPress = async (post: Post) => {
@@ -45,7 +45,6 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
         .update({ views: post.views + 1 })
         .eq('id', post.id);
 
-      // 상세 페이지로 이동
       router.push({
         pathname: "/main/community/read_post",
         params: { post: JSON.stringify(post) }
@@ -70,7 +69,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
         renderItem={({ item: post }) => (
           <TouchableOpacity
             style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}
-            onPress={() => handlePostPress(post)} // 클릭 시 조회수 증가 및 상세 페이지 이동
+            onPress={() => handlePostPress(post)}
           >
             <View style={styles.tag}>
               <Text style={[styles.tagText, { color: COLORS.gray }]}>{post.tag}</Text>
@@ -80,6 +79,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
             <View style={styles.viewContainer}>
               <View style={styles.statItem}>
                 <EvilIcons name="like" size={15} />
+                <Text style={styles.statText}>{post.like_count}</Text>
               </View>
               <View style={styles.statItem}>
                 <FontAwesome name="commenting-o" size={10} />
