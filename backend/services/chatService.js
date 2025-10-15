@@ -142,21 +142,30 @@ export async function getChatHistory(req, res) {
 		const koreaTime = new Date(today.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
 		const todayStr = koreaTime.toISOString().split('T')[0]; // YYYY-MM-DD 형식
 
-		// 테스트용: 오늘 10:00부터 23:59까지의 대화 기록만 불러오기 (00:00-10:00 제외)
+		// 오늘 하루 전체의 대화 기록 불러오기 (한국 시간 기준)
 		const { data: chatHistory, error: historyError } = await supabase
 			.from('chat_messages')
 			.select('user_chat, ai_answer, created_at')
 			.eq('user_id', user_id)
-			.gte('created_at', `${todayStr}T01:00:00.000Z`) // 한국시간 10:00 (UTC+9)
-			.lt('created_at', `${todayStr}T14:59:59.999Z`)   // 한국시간 23:59 (UTC+9)
+			.gte('created_at', `${todayStr}T00:00:00.000Z`) // 한국시간 00:00 (UTC+9)
+			.lt('created_at', `${todayStr}T23:59:59.999Z`)   // 한국시간 23:59 (UTC+9)
 			.order('created_at', { ascending: false });
+
+		// 테스트용: 오늘 10:00부터 23:59까지의 대화 기록만 불러오기 (00:00-10:00 제외)
+		// const { data: chatHistory, error: historyError } = await supabase
+		// 	.from('chat_messages')
+		// 	.select('user_chat, ai_answer, created_at')
+		// 	.eq('user_id', user_id)
+		// 	.gte('created_at', `${todayStr}T01:00:00.000Z`) // 한국시간 10:00 (UTC+9)
+		// 	.lt('created_at', `${todayStr}T14:59:59.999Z`)   // 한국시간 23:59 (UTC+9)
+		// 	.order('created_at', { ascending: false });
 
 		if (historyError) {
 			console.error('Chat history error:', historyError);
 			return res.status(500).json({ error: '대화 기록 불러오기 실패' });
 		}
 
-		console.log(`📅 오늘(${todayStr}) 10:00-23:59 대화 기록 개수:`, chatHistory?.length || 0);
+		console.log(`📅 오늘(${todayStr}) 하루 전체 대화 기록 개수:`, chatHistory?.length || 0);
 		res.json({ chatHistory: chatHistory || [] });
 
 	} catch (error) {

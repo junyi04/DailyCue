@@ -126,13 +126,23 @@ export async function deleteRecord(req, res) {
 			return res.status(400).json({ error: 'record_id is required' });
 		}
 
+		// record_id가 date 형식(YYYY-MM-DD)인지 확인
+		const isDateFormat = /^\d{4}-\d{2}-\d{2}/.test(record_id);
+		
 		// 해당 사용자의 기록인지 확인 후 삭제
-		const { data, error } = await supabase
+		const deleteQuery = supabase
 			.from('records')
 			.delete()
-			.eq('id', record_id)
-			.eq('user_id', user_id)
-			.select('*');
+			.eq('user_id', user_id);
+		
+		// date 또는 id로 삭제 시도
+		if (isDateFormat) {
+			deleteQuery.eq('date', record_id);
+		} else {
+			deleteQuery.eq('id', record_id);
+		}
+		
+		const { data, error } = await deleteQuery.select('*');
 
 		if (error) {
 			console.error('기록 삭제 에러:', error);

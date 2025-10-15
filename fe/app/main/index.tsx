@@ -109,13 +109,16 @@ export default function JournalScreen() {
               console.log('📥 백엔드에서 가져온 기록:', backendRecords);
               
               // 백엔드 데이터를 Record 타입으로 변환
-              const convertedRecords: Record[] = backendRecords.map((record: any) => ({
-                id: record.id || Date.now().toString(),
-                emoji: '😐', // 기본 이모지
-                title: record.title || '기록',
-                content: record.notes || '',
-                createdAt: record.date || new Date().toISOString(),
-              }));
+              const convertedRecords: Record[] = backendRecords.map((record: any) => {
+                console.log('🔍 실제 기록 데이터:', JSON.stringify(record));
+                return {
+                  id: record.id || record.date || Date.now().toString(),
+                  emoji: '😐', // 기본 이모지
+                  title: record.title || '기록',
+                  content: record.notes || '',
+                  createdAt: record.date || new Date().toISOString(),
+                };
+              });
               
               setRecords(convertedRecords);
               await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(convertedRecords));
