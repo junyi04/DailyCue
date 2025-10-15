@@ -10,10 +10,11 @@ import { recordApiService } from '@/services/recordApiService';
 interface SavedRecordsProps {
   records: Record[];
   onRecordSelect: (record: Record) => void;
-  onRecordDelete?: (recordId: string) => void;
+  onRecordDelete?: (recordId: string) => Promise<void>;
+  userId?: string;
 }
 
-export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSelect, onRecordDelete }) => {
+export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSelect, onRecordDelete, userId }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [currentPage, setCurrentPage] = useState(1);
   const RECORDS_PER_PAGE = 3;
@@ -70,15 +71,16 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
           style: 'destructive',
           onPress: async () => {
             try {
-              console.log('🗑️ 기록 삭제 시작:', record.id);
-              await recordApiService.deleteRecord(record.id, 'test_user');
+              console.log('🗑️ 기록 삭제 요청:', record.id);
+              console.log('👤 사용자 ID:', userId || 'test_user');
               
-              // 부모 컴포넌트에 삭제 알림
+              // 부모 컴포넌트에 삭제 요청 (실제 삭제는 부모에서 처리)
               if (onRecordDelete) {
-                onRecordDelete(record.id);
+                await onRecordDelete(record.id);
+                Alert.alert('성공', '기록이 삭제되었습니다.');
+              } else {
+                Alert.alert('오류', '삭제 기능을 사용할 수 없습니다.');
               }
-              
-              Alert.alert('성공', '기록이 삭제되었습니다.');
             } catch (error) {
               console.error('❌ 기록 삭제 실패:', error);
               Alert.alert('오류', '기록 삭제에 실패했습니다.');

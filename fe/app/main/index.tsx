@@ -1,59 +1,155 @@
-// 홈 화면
+// 1. store/recordStore.js (Zustand 전역 상태 - TypeScript 버전)
+import { create } from 'zustand';
+import { recordApiService } from '@/services/recordApiService';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { STORAGE_KEY } from '@/hooks/useRecords';
+
+// 타입 정의 - 기존 types.ts의 Record 타입 사용
+import { Record } from '@/types';
+
+interface RecordStore {
+  records: Record[];
+  isLoading: boolean;
+  lastSync: number | null;
+  setRecords: (records: Record[]) => void;
+  addRecord: (record: Record) => void;
+  deleteRecord: (recordId: string, userId: string) => Promise<void>;
+  syncWithBackend: (userId: string, force?: boolean) => Promise<void>;
+  loadFromStorage: () => Promise<void>;
+}
+
+export const useRecordStore = create<RecordStore>((set, get) => ({
+  records: [],
+  isLoading: false,
+  lastSync: null,
+
+  setRecords: (records: Record[]) => set({ records }),
+
+  addRecord: (record: Record) => set((state) => ({ 
+    records: [record, ...state.records] 
+  })),
+
+  // 낙관적 업데이트로 즉시 UI 반영
+  deleteRecord: async (recordId: string, userId: string) => {
+    const { records } = get();
+    const deletedRecord = records.find((r: Record) => r.id === recordId);
+    
+    // 1. 즉시 UI에서 제거 (낙관적 업데이트)
+    set({ records: records.filter((r: Record) => r.id !== recordId) });
+    
+    // 2. AsyncStorage 즉시 업데이트
+    const updatedRecords = records.filter((r: Record) => r.id !== recordId);
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRecords)).catch(console.error);
+
+    try {
+      // 3. 백엔드 삭제 (백그라운드)
+      await recordApiService.deleteRecord(recordId, userId);
+      console.log('✅ 백엔드 삭제 완료');
+    } catch (error) {
+      console.error('❌ 백엔드 삭제 실패:', error);
+      
+      // 4. 실패 시 롤백
+      if (deletedRecord) {
+        set({ records: [...get().records, deletedRecord] });
+        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...get().records])).catch(console.error);
+      }
+      
+      throw error; // UI에 에러 전달
+    }
+  },
+
+  // 백엔드 동기화 (5분마다 또는 강제 호출 시에만)
+  syncWithBackend: async (userId: string, force: boolean = false) => {
+    const { lastSync } = get();
+    const SYNC_INTERVAL = 5 * 60 * 1000; // 5분
+    
+    // 강제 호출이거나 5분 이상 지났을 때만 동기화
+    if (!force && lastSync && Date.now() - lastSync < SYNC_INTERVAL) {
+      console.log('🔄 최근 동기화 완료, 스킵');
+      return;
+    }
+
+    set({ isLoading: true });
+    
+    try {
+      const backendRecords = await recordApiService.getRecords(userId);
+      
+      const convertedRecords = backendRecords.map((record) => ({
+        id: record.id || Date.now().toString(),
+        emoji: '😐' as const,
+        title: record.title || '기록',
+        content: record.notes || '',
+        createdAt: record.date || new Date().toISOString(),
+      }));
+      
+      set({ 
+        records: convertedRecords, 
+        lastSync: Date.now() 
+      });
+      
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(convertedRecords));
+      console.log('✅ 백엔드 동기화 완료:', convertedRecords.length);
+    } catch (error) {
+      console.error('❌ 백엔드 동기화 실패:', error);
+    } finally {
+      set({ isLoading: false });
+    }
+  },
+
+  // 초기 로드 (앱 시작 시 한 번만)
+  loadFromStorage: async () => {
+    try {
+      const storedRecords = await AsyncStorage.getItem(STORAGE_KEY);
+      if (storedRecords) {
+        const parsedRecords = JSON.parse(storedRecords);
+        set({ records: parsedRecords });
+        console.log('📥 AsyncStorage 로드:', parsedRecords.length);
+      }
+    } catch (error) {
+      console.error('❌ AsyncStorage 로드 실패:', error);
+    }
+  },
+
+}));
+
+
+// 2. 개선된 JournalScreen.jsx (JavaScript 버전)
 import Button from '@/components/main_screen/journal/Button';
 import HeadScreen from '@/components/main_screen/journal/HeadScreen';
 import SavedRecords from '@/components/main_screen/journal/SavedRecords';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { STORAGE_KEY } from '@/hooks/useRecords';
-import { Record } from '@/types';
-import { recordApiService } from '@/services/recordApiService';
 import { supabase } from '@/lib/supabase';
 import { Ionicons } from '@expo/vector-icons';
-import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format, isToday } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
-import { useFocusEffect } from 'expo-router';
-import { useCallback, useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
-
 export default function JournalScreen() {
-  const [records, setRecords] = useState<Record[]>([]);
+  const { records, isLoading, deleteRecord, syncWithBackend, loadFromStorage } = useRecordStore();
   const [modalRecord, setModalRecord] = useState<Record | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [hasInitialLoad, setHasInitialLoad] = useState(false);
 
-  // 오늘 기록 개수 계산
+  // 오늘 기록 개수
   const getTodayRecordCount = () => {
-    const today = new Date();
-    return records.filter(record => {
-      const recordDate = new Date(record.createdAt);
-      return isToday(recordDate);
-    }).length;
+    return records.filter((record: Record) => isToday(new Date(record.createdAt))).length;
   };
 
-  // 기록 삭제 핸들러
+  // 삭제 핸들러 - 낙관적 업데이트로 즉시 반영
   const handleRecordDelete = async (recordId: string) => {
+    if (!userId) return;
+    
     try {
-      // 로컬 상태에서 기록 제거
-      setRecords(prevRecords => prevRecords.filter(record => record.id !== recordId));
-      
-      // AsyncStorage에서도 제거
-      const updatedRecords = records.filter(record => record.id !== recordId);
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRecords));
-      
-      // 백엔드 동기화 필요 플래그 설정
-      await AsyncStorage.setItem('@needsBackendSync', 'true');
-      
-      console.log('✅ 로컬에서 기록 삭제 완료:', recordId);
+      await deleteRecord(recordId, userId);
+      // 삭제 성공 - UI는 이미 업데이트됨
     } catch (error) {
-      console.error('❌ 로컬 기록 삭제 실패:', error);
+      // 롤백은 store에서 자동 처리
+      alert('기록 삭제에 실패했습니다.');
     }
   };
 
-
-  // 현재 로그인된 사용자 정보 가져오기
+  // 사용자 인증 (한 번만)
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
@@ -69,86 +165,39 @@ export default function JournalScreen() {
         console.error('Error in getCurrentUser:', error);
       }
     };
-
     getCurrentUser();
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      const fetchRecords = async () => {
-        // 이미 초기 로드가 완료된 경우, 백엔드 동기화만 확인
-        if (hasInitialLoad) {
-          const needsSync = await AsyncStorage.getItem('@needsBackendSync');
-          if (needsSync !== 'true') {
-            return; // 동기화가 필요하지 않으면 스킵
-          }
+  // 초기 데이터 로드 및 동기화 (userId 있을 때만)
+  useEffect(() => {
+    if (!userId) return;
+
+    const initializeData = async () => {
+      // 1. 먼저 캐시된 데이터 즉시 로드 (깜빡임 없음)
+      await loadFromStorage();
+      
+      // 2. 백엔드 동기화 필요 플래그 확인
+      try {
+        const needsSync = await AsyncStorage.getItem('@needsBackendSync');
+        const shouldForceSync = needsSync === 'true';
+        
+        if (shouldForceSync) {
+          console.log('🔄 백엔드 동기화 플래그 감지 - 강제 동기화 실행');
+          await syncWithBackend(userId, true); // 강제 동기화
+          await AsyncStorage.removeItem('@needsBackendSync'); // 플래그 제거
+        } else {
+          // 3. 백그라운드에서 백엔드 동기화 (5분마다만)
+          await syncWithBackend(userId);
         }
-
-        if (!hasInitialLoad) {
-          setIsLoading(true);
-        }
-
-        try {
-          // 먼저 AsyncStorage에서 빠르게 로드
-          const storedRecords = await AsyncStorage.getItem(STORAGE_KEY);
-          if (storedRecords !== null && !hasInitialLoad) {
-            const parsedRecords = JSON.parse(storedRecords);
-            setRecords(parsedRecords);
-            console.log('📥 AsyncStorage에서 기록 로드:', parsedRecords.length);
-          }
-
-          // 백엔드 동기화가 필요한지 확인
-          const needsSync = await AsyncStorage.getItem('@needsBackendSync');
-          const shouldSync = needsSync === 'true' || storedRecords === null;
-
-          // 백엔드에서 최신 데이터 가져오기
-          if (userId && shouldSync) {
-            try {
-              console.log('🔄 백엔드에서 최신 데이터 동기화...');
-              const backendRecords = await recordApiService.getRecords(userId);
-              console.log('📥 백엔드에서 가져온 기록:', backendRecords);
-              
-              // 백엔드 데이터를 Record 타입으로 변환
-              const convertedRecords: Record[] = backendRecords.map((record: any) => {
-                console.log('🔍 실제 기록 데이터:', JSON.stringify(record));
-                return {
-                  id: record.id || record.date || Date.now().toString(),
-                  emoji: '😐', // 기본 이모지
-                  title: record.title || '기록',
-                  content: record.notes || '',
-                  createdAt: record.date || new Date().toISOString(),
-                };
-              });
-              
-              setRecords(convertedRecords);
-              await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(convertedRecords));
-              
-              // 동기화 완료 플래그 제거
-              await AsyncStorage.removeItem('@needsBackendSync');
-              console.log('✅ 백엔드 동기화 완료');
-            } catch (backendError) {
-              console.error('❌ 백엔드 동기화 실패:', backendError);
-              // 백엔드 실패 시 AsyncStorage 데이터 유지
-            }
-          } else if (userId && !shouldSync) {
-            console.log('📋 백엔드 동기화 불필요, AsyncStorage 데이터 사용');
-          }
-        } catch (error) {
-          console.error('기록을 가져오는데 실패했습니다.', error);
-          if (!hasInitialLoad) {
-            setRecords([]);
-          }
-        } finally {
-          if (!hasInitialLoad) {
-            setIsLoading(false);
-            setHasInitialLoad(true);
-          }
-        }
+      } catch (error) {
+        console.error('❌ 동기화 플래그 확인 실패:', error);
+        // 플래그 확인 실패 시에도 기본 동기화는 실행
+        await syncWithBackend(userId);
       }
-      fetchRecords();
-    }, [userId, hasInitialLoad])
-  );
+    };
 
+    initializeData();
+  }, [userId]);
 
   return (
     <SafeAreaProvider style={styles.container}>
@@ -161,8 +210,9 @@ export default function JournalScreen() {
       <View style={styles.head}>
         <HeadScreen />
       </View>
+      
       <View style={styles.body}>
-        {isLoading ? (
+        {isLoading && records.length === 0 ? (
           <View style={styles.loadingContainer}>
             <Text style={styles.loadingText}>기록을 불러오는 중...</Text>
           </View>
@@ -171,21 +221,20 @@ export default function JournalScreen() {
             <Button count={getTodayRecordCount()} />
             <SavedRecords
               records={records}
-              onRecordSelect={setModalRecord}
+              onRecordSelect={(record: Record) => setModalRecord(record)}
               onRecordDelete={handleRecordDelete}
+              userId={userId || undefined}
             />
           </>
         )}
       </View>
 
-      {/* modalRecord가 있을 때만 Modal 띄움 */}
       <Modal
         visible={!!modalRecord}
         animationType="slide"
         transparent={true}
         onRequestClose={() => setModalRecord(null)}
       >
-        {/* 모달 내부 */}
         <View style={styles.overlay}>
           <SafeAreaView style={[styles.modalContainer, { marginTop: 100 }]}>
             {modalRecord && (
@@ -194,7 +243,10 @@ export default function JournalScreen() {
                   <Text style={styles.expandedDateText}>
                     {format(new Date(modalRecord.createdAt), 'yyyy년 M월 d일')}
                   </Text>
-                  <TouchableOpacity onPress={() => setModalRecord(null)} style={styles.headerCollapseButton}>
+                  <TouchableOpacity 
+                    onPress={() => setModalRecord(null)} 
+                    style={styles.headerCollapseButton}
+                  >
                     <Ionicons name="close" size={28} color={COLORS.darkGray} />
                   </TouchableOpacity>
                 </View>
@@ -210,7 +262,7 @@ export default function JournalScreen() {
       </Modal>
     </SafeAreaProvider>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -225,11 +277,10 @@ const styles = StyleSheet.create({
     justifyContent: 'flex-end',
   },
   overlay: {
-  flex: 1,
+    flex: 1,
     backgroundColor: "rgba(0,0,0,0.75)",
     justifyContent: "flex-start",
   },
-
   modalContainer: {
     flex: 1,
     backgroundColor: COLORS.pageBackground,

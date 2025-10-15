@@ -129,6 +129,8 @@ export async function deleteRecord(req, res) {
 		// record_id가 date 형식(YYYY-MM-DD)인지 확인
 		const isDateFormat = /^\d{4}-\d{2}-\d{2}/.test(record_id);
 		
+		console.log('🔍 삭제 시도:', { record_id, isDateFormat, user_id });
+		
 		// 해당 사용자의 기록인지 확인 후 삭제
 		const deleteQuery = supabase
 			.from('records')
@@ -137,8 +139,10 @@ export async function deleteRecord(req, res) {
 		
 		// date 또는 id로 삭제 시도
 		if (isDateFormat) {
+			console.log('📅 date 필드로 삭제 시도:', record_id);
 			deleteQuery.eq('date', record_id);
 		} else {
+			console.log('🆔 id 필드로 삭제 시도:', record_id);
 			deleteQuery.eq('id', record_id);
 		}
 		
