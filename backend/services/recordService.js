@@ -113,3 +113,58 @@ export async function getRecords(req, res) {
 		});
 	}
 }
+
+// 기록 삭제 API
+export async function deleteRecord(req, res) {
+	try {
+		const { record_id } = req.params;
+		const { user_id = 'test_user' } = req.query;
+		
+		console.log('📥 기록 삭제 요청:', { record_id, user_id });
+
+		if (!record_id) {
+			return res.status(400).json({ error: 'record_id is required' });
+		}
+
+		// 해당 사용자의 기록인지 확인 후 삭제
+		const { data, error } = await supabase
+			.from('records')
+			.delete()
+			.eq('id', record_id)
+			.eq('user_id', user_id)
+			.select('*');
+
+		if (error) {
+			console.error('기록 삭제 에러:', error);
+			return res.status(500).json({ error: '기록 삭제 실패' });
+		}
+
+		if (!data || data.length === 0) {
+			return res.status(404).json({ error: '기록을 찾을 수 없습니다' });
+		}
+
+		console.log('📤 삭제된 기록:', data[0]);
+		
+		// 분석 캐시 무효화(비차단)
+		(async () => {
+			try {
+				const { getRedisClient } = await import('../config/redis.js');
+				const redis = await getRedisClient();
+				if (redis) {
+					const prefix = `${user_id}:`;
+					for await (const key of redis.scanIterator({ MATCH: `${prefix}*`, COUNT: 100 })) {
+						await redis.del(key);
+					}
+				}
+			} catch (_) {}
+		})();
+
+		res.json({ success: true, deletedRecord: data[0] });
+	} catch (e) {
+		console.error('기록 삭제 실패:', e);
+		res.status(500).json({ 
+			error: '기록 삭제 실패',
+			details: e.message 
+		});
+	}
+}

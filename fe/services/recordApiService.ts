@@ -13,6 +13,11 @@ export interface RecordResponse {
   data: any;
 }
 
+export interface DeleteRecordResponse {
+  success: boolean;
+  deletedRecord: any;
+}
+
 export const recordApiService = {
   // 기록 저장
   async saveRecord(recordData: RecordData): Promise<RecordResponse> {
@@ -71,6 +76,35 @@ export const recordApiService = {
       return result; // 백엔드에서 직접 배열을 반환하므로 result.data가 아님
     } catch (error) {
       console.error('❌ 기록 조회 실패:', error);
+      throw error;
+    }
+  },
+
+  // 기록 삭제
+  async deleteRecord(recordId: string, userId: string): Promise<DeleteRecordResponse> {
+    try {
+      console.log('🌐 기록 삭제 API 호출:', `${API_BASE_URL}/record/${recordId}?user_id=${userId}`);
+      
+      const response = await fetch(`${API_BASE_URL}/record/${recordId}?user_id=${userId}`, {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+      });
+
+      console.log('📡 기록 삭제 응답 상태:', response.status, response.statusText);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ 기록 삭제 서버 에러:', errorText);
+        throw new Error(`HTTP error! status: ${response.status}, message: ${errorText}`);
+      }
+
+      const result = await response.json();
+      console.log('✅ 기록 삭제 성공:', result);
+      return result;
+    } catch (error) {
+      console.error('❌ 기록 삭제 실패:', error);
       throw error;
     }
   }

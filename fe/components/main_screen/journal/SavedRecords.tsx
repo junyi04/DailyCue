@@ -2,17 +2,21 @@ import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { Record } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isSameDay } from 'date-fns';
-import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import React, { useState, useMemo } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View, Alert } from "react-native";
 import MonthlyCalendar from "./calendar/MonthlyCalendar";
+import { recordApiService } from '@/services/recordApiService';
 
 interface SavedRecordsProps {
   records: Record[];
   onRecordSelect: (record: Record) => void;
+  onRecordDelete?: (recordId: string) => void;
 }
 
-export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSelect }) => {
+export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSelect, onRecordDelete }) => {
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [currentPage, setCurrentPage] = useState(1);
+  const RECORDS_PER_PAGE = 3;
 
   // 선택된 날짜의 기록들만 필터링하고 시간순으로 정렬 (최신 기록이 위에)
   const recordsForSelectedDay = records
@@ -25,9 +29,64 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
       return dateB.getTime() - dateA.getTime();
     });
 
+  // 페이지네이션 계산
+  const totalPages = Math.ceil(recordsForSelectedDay.length / RECORDS_PER_PAGE);
+  const startIndex = (currentPage - 1) * RECORDS_PER_PAGE;
+  const endIndex = startIndex + RECORDS_PER_PAGE;
+  const currentRecords = recordsForSelectedDay.slice(startIndex, endIndex);
+
+  // 날짜가 변경되면 첫 페이지로 리셋
+  React.useEffect(() => {
+    setCurrentPage(1);
+  }, [selectedDate]);
+
   // 단일클릭: 상세보기 모달 열기
   const handleRecordPress = (record: Record) => {
     onRecordSelect(record);
+  };
+
+  // 페이지 변경 핸들러
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 기록 삭제 핸들러
+  const handleDeleteRecord = async (record: Record) => {
+    if (!record.id) {
+      Alert.alert('오류', '삭제할 기록의 ID가 없습니다.');
+      return;
+    }
+
+    Alert.alert(
+      '기록 삭제',
+      '이 기록을 삭제하시겠습니까?',
+      [
+        {
+          text: '취소',
+          style: 'cancel',
+        },
+        {
+          text: '삭제',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              console.log('🗑️ 기록 삭제 시작:', record.id);
+              await recordApiService.deleteRecord(record.id, 'test_user');
+              
+              // 부모 컴포넌트에 삭제 알림
+              if (onRecordDelete) {
+                onRecordDelete(record.id);
+              }
+              
+              Alert.alert('성공', '기록이 삭제되었습니다.');
+            } catch (error) {
+              console.error('❌ 기록 삭제 실패:', error);
+              Alert.alert('오류', '기록 삭제에 실패했습니다.');
+            }
+          },
+        },
+      ]
+    );
   };
 
   return (
@@ -48,8 +107,9 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
           </View>
           
           {recordsForSelectedDay.length > 0 ? (
-            <View style={styles.recordsList}>
-              {recordsForSelectedDay.map((record, index) => (
+            <>
+              <View style={styles.recordsList}>
+                {currentRecords.map((record, index) => (
                 <TouchableOpacity 
                   key={record.id || index} 
                   style={styles.recordItem} 
@@ -70,13 +130,70 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
                     >
                       <Ionicons name={'open-outline'} size={24} color={COLORS.darkGray} />
                     </TouchableOpacity>
-                    <TouchableOpacity style={styles.deleteButton} activeOpacity={0.7}>
+                    <TouchableOpacity 
+                      style={styles.deleteButton} 
+                      activeOpacity={0.7}
+                      onPress={() => handleDeleteRecord(record)}
+                    >
                       <Ionicons name={'trash-outline'} size={20} color={COLORS.red} />
                     </TouchableOpacity>
                   </View>
                 </TouchableOpacity>
-              ))}
-            </View>
+                ))}
+              </View>
+              
+              {/* 페이지네이션 */}
+              {totalPages > 1 && (
+                <View style={styles.paginationContainer}>
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === 1 && styles.disabledButton]}
+                    onPress={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons 
+                      name="chevron-back" 
+                      size={20} 
+                      color={currentPage === 1 ? COLORS.gray : COLORS.darkGray} 
+                    />
+                  </TouchableOpacity>
+                  
+                  <View style={styles.pageNumbers}>
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+                      <TouchableOpacity
+                        key={page}
+                        style={[
+                          styles.pageNumber,
+                          currentPage === page && styles.activePageNumber
+                        ]}
+                        onPress={() => handlePageChange(page)}
+                        activeOpacity={0.7}
+                      >
+                        <Text style={[
+                          styles.pageNumberText,
+                          currentPage === page && styles.activePageNumberText
+                        ]}>
+                          {page}
+                        </Text>
+                      </TouchableOpacity>
+                    ))}
+                  </View>
+                  
+                  <TouchableOpacity
+                    style={[styles.pageButton, currentPage === totalPages && styles.disabledButton]}
+                    onPress={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                    activeOpacity={0.7}
+                  >
+                    <Ionicons 
+                      name="chevron-forward" 
+                      size={20} 
+                      color={currentPage === totalPages ? COLORS.gray : COLORS.darkGray} 
+                    />
+                  </TouchableOpacity>
+                </View>
+              )}
+            </>
           ) : (
             <View style={styles.emptyView}>
               <Text style={styles.emptyText}>
@@ -173,6 +290,50 @@ const styles = StyleSheet.create({
   emptyText: { 
     fontSize: 14, 
     color: COLORS.darkGray 
+  },
+  // 페이지네이션 스타일
+  paginationContainer: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginTop: SIZES.medium,
+    paddingVertical: SIZES.small,
+    gap: 10,
+  },
+  pageButton: {
+    padding: 8,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  disabledButton: {
+    backgroundColor: COLORS.gray,
+    opacity: 0.5,
+  },
+  pageNumbers: {
+    flexDirection: 'row',
+    gap: 5,
+  },
+  pageNumber: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 15,
+    backgroundColor: COLORS.lightGray,
+    minWidth: 30,
+    alignItems: 'center',
+  },
+  activePageNumber: {
+    backgroundColor: COLORS.secondary,
+  },
+  pageNumberText: {
+    ...FONTS.body,
+    color: COLORS.darkGray,
+    fontWeight: '500',
+  },
+  activePageNumberText: {
+    color: COLORS.white,
+    fontWeight: 'bold',
   },
 });
 

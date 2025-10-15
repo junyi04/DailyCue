@@ -137,19 +137,26 @@ export async function getChatHistory(req, res) {
 	try {
 		const { user_id = 'test_user' } = req.query;
 
-		// 최근 10개 대화 기록 불러오기
+		// 오늘 날짜 계산 (한국 시간 기준)
+		const today = new Date();
+		const koreaTime = new Date(today.getTime() + (9 * 60 * 60 * 1000)); // UTC+9
+		const todayStr = koreaTime.toISOString().split('T')[0]; // YYYY-MM-DD 형식
+
+		// 테스트용: 오늘 10:00부터 23:59까지의 대화 기록만 불러오기 (00:00-10:00 제외)
 		const { data: chatHistory, error: historyError } = await supabase
 			.from('chat_messages')
 			.select('user_chat, ai_answer, created_at')
 			.eq('user_id', user_id)
-			.order('created_at', { ascending: false })
-			.limit(10);
+			.gte('created_at', `${todayStr}T01:00:00.000Z`) // 한국시간 10:00 (UTC+9)
+			.lt('created_at', `${todayStr}T14:59:59.999Z`)   // 한국시간 23:59 (UTC+9)
+			.order('created_at', { ascending: false });
 
 		if (historyError) {
 			console.error('Chat history error:', historyError);
 			return res.status(500).json({ error: '대화 기록 불러오기 실패' });
 		}
 
+		console.log(`📅 오늘(${todayStr}) 10:00-23:59 대화 기록 개수:`, chatHistory?.length || 0);
 		res.json({ chatHistory: chatHistory || [] });
 
 	} catch (error) {

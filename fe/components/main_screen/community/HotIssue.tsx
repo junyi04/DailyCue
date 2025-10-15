@@ -6,6 +6,7 @@ import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 
 interface CommunityPostProps {
@@ -14,8 +15,7 @@ interface CommunityPostProps {
 
 
 const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
-  const name = "준이";
-
+  const [userName, setUserName] = useState<string>("님");
   const [viewCount, setViewCount] = useState<number>(0);
 
   // 조회수 증가 핸들링
@@ -30,6 +30,23 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
     });
   };
 
+  // 사용자 이름 가져오기
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const storedProfile = await AsyncStorage.getItem('@user_profile');
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          setUserName(profile.nickname || "님");
+        }
+      } catch (error) {
+        console.error('사용자 이름 로드 실패:', error);
+      }
+    };
+    
+    loadUserName();
+  }, []);
+
   // 처음 화면에 보여지는 게시글의 조회수를 상태로 설정
   useEffect(() => {
     if (posts.length > 0) {
@@ -39,7 +56,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.text}>{name}님께 추천드리는 큐픽 🔥</Text>
+      <Text style={styles.text}>{userName}님께 추천드리는 큐픽 🔥</Text>
       <FlatList
         data={posts}
         horizontal

@@ -1,19 +1,55 @@
-import { SET_MESSAGE } from '@/constants/messageContents';
+import { SET_MESSAGE, createWelcomeMessages } from '@/constants/messageContents';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { API_BASE_URL } from '@/constants/config';
 import { Message } from "@/types";
 import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ListRenderItem, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
+import { ListRenderItem, StyleSheet, Text, TextInput, TouchableOpacity, View, Keyboard } from "react-native";
 import { FlatList } from 'react-native-gesture-handler';
 import { supabase } from "@/lib/supabase";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const MessagePart = () => {
   const [input, setInput] = useState<string>('');
   const [messages, setMessages] = useState<Message[]>(SET_MESSAGE);
   const [userId, setUserId] = useState<string | null>(null);
+  const [userName, setUserName] = useState<string>("님");
   const flatListRef = useRef<FlatList>(null);
+
+  // 자동 스크롤 함수
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 100);
+  }, []);
+
+  // 강제 스크롤 함수 (더 확실한 스크롤)
+  const forceScrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: false });
+    }, 50);
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true });
+    }, 150);
+  }, []);
+
+  // 사용자 이름 가져오기
+  useEffect(() => {
+    const loadUserName = async () => {
+      try {
+        const storedProfile = await AsyncStorage.getItem('@user_profile');
+        if (storedProfile) {
+          const profile = JSON.parse(storedProfile);
+          setUserName(profile.nickname || "님");
+        }
+      } catch (error) {
+        console.error('사용자 이름 로드 실패:', error);
+      }
+    };
+    
+    loadUserName();
+  }, []);
 
   // 현재 로그인된 사용자 정보 가져오기
   useEffect(() => {
@@ -65,23 +101,44 @@ const MessagePart = () => {
             }
           ]).flat();
         
-        setMessages(formattedMessages);
+        // 환영 메시지 + 채팅 기록 조합
+        const welcomeMessages = [...createWelcomeMessages(userName), ...formattedMessages];
+        setMessages(welcomeMessages);
         
-        // 채팅 기록 로드 후 맨 아래로 스크롤
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true });
-        }, 100);
+        // 채팅 기록 로드 후 맨 아래로 스크롤 (강제 스크롤 사용)
+        forceScrollToBottom();
+      } else {
+        // 채팅 기록이 없으면 환영 메시지만 표시
+        setMessages(createWelcomeMessages(userName));
       }
     } catch (error) {
       console.error('Failed to fetch chat history:', error);
+      // 에러 시에도 환영 메시지는 표시
+      setMessages(createWelcomeMessages(userName));
     }
-  }, [userId]);
+  }, [userId, userName]);
 
   useEffect(() => {
     // 사용자 ID가 없으면 채팅 기록을 가져오지 않음
     if (!userId) return;
     fetchChatHistory();
   }, [userId, fetchChatHistory]);
+
+  // 키보드 이벤트 리스너
+  useEffect(() => {
+    const keyboardDidShowListener = Keyboard.addListener('keyboardDidShow', () => {
+      forceScrollToBottom();
+    });
+    
+    const keyboardDidHideListener = Keyboard.addListener('keyboardDidHide', () => {
+      forceScrollToBottom();
+    });
+
+    return () => {
+      keyboardDidShowListener?.remove();
+      keyboardDidHideListener?.remove();
+    };
+  }, [forceScrollToBottom]);
   
   const onSend = useCallback(async () => {
     if (!userId) {
@@ -106,6 +163,9 @@ const MessagePart = () => {
       setMessages(prev => [...prev, newMessage]);
       setInput('');
       
+      // 메시지 추가 후 자동 스크롤
+      forceScrollToBottom();
+      
       try {
         const response = await fetch(`${API_BASE_URL}/chat`, {
           method: 'POST',
@@ -128,6 +188,9 @@ const MessagePart = () => {
             createdAt: format(new Date(), 'p'),
           };
           setMessages(prev => [...prev, aiResponse]);
+          
+          // AI 응답 후 자동 스크롤
+          forceScrollToBottom();
         } else {
           // 에러 발생 시 사용자에게 알림
           const errorMessage: Message = {
@@ -137,6 +200,7 @@ const MessagePart = () => {
             createdAt: format(new Date(), 'p'),
           };
           setMessages(prev => [...prev, errorMessage]);
+          forceScrollToBottom();
         }
       } catch (error) {
         console.error('Chat error:', error);
@@ -147,6 +211,7 @@ const MessagePart = () => {
           createdAt: format(new Date(), 'p'),
         };
         setMessages(prev => [...prev, errorMessage]);
+        forceScrollToBottom();
       }
     }
   }, [input, userId]);

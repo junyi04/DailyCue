@@ -20,7 +20,7 @@ import {
   analyzeYearlyHandler
 } from './services/analysisService.js';
 import { handleChatRequest, getChatHistory } from './services/chatService.js';
-import { handleRecordRequest, getRecords } from './services/recordService.js';
+import { handleRecordRequest, getRecords, deleteRecord } from './services/recordService.js';
 
 // Swagger import
 import { swaggerUi, specs } from './config/swagger.js';
@@ -212,6 +212,55 @@ app.post('/record', handleRecordRequest);
  */
 app.get('/record', getRecords);
 
+// Record 삭제 endpoint
+/**
+ * @swagger
+ * /record/{record_id}:
+ *   delete:
+ *     summary: 기록 삭제
+ *     tags: [Records]
+ *     parameters:
+ *       - in: path
+ *         name: record_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: 삭제할 기록의 ID
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *         required: true
+ *         description: 사용자 ID
+ *     responses:
+ *       200:
+ *         description: 기록 삭제 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                   example: true
+ *                 deletedRecord:
+ *                   type: object
+ *                   description: 삭제된 기록 정보
+ *       404:
+ *         description: 기록을 찾을 수 없음
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *       400:
+ *         description: 잘못된 요청
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ */
+app.delete('/record/:record_id', deleteRecord);
+
 
 /**
  * @swagger
@@ -394,6 +443,7 @@ app.use((req, res) => {
       'GET /health',
       'GET /record',
       'POST /record',
+      'DELETE /record/:record_id',
       'GET|POST /analyze',
       'POST /chat',
       'GET /chat/history'
@@ -414,6 +464,7 @@ app.listen(PORT, '0.0.0.0', () => {
   console.log('- GET  /api-docs (Swagger API Documentation)');
   console.log('- GET  /record (Get records)');
   console.log('- POST /record (Save record)');
+  console.log('- DELETE /record/:record_id (Delete record)');
   console.log('- GET|POST /analyze (Analyze records)');
   console.log('- POST /chat (Chatbot)');
   console.log('- GET  /metrics (Prometheus metrics)');

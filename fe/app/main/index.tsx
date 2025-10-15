@@ -33,6 +33,25 @@ export default function JournalScreen() {
     }).length;
   };
 
+  // 기록 삭제 핸들러
+  const handleRecordDelete = async (recordId: string) => {
+    try {
+      // 로컬 상태에서 기록 제거
+      setRecords(prevRecords => prevRecords.filter(record => record.id !== recordId));
+      
+      // AsyncStorage에서도 제거
+      const updatedRecords = records.filter(record => record.id !== recordId);
+      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRecords));
+      
+      // 백엔드 동기화 필요 플래그 설정
+      await AsyncStorage.setItem('@needsBackendSync', 'true');
+      
+      console.log('✅ 로컬에서 기록 삭제 완료:', recordId);
+    } catch (error) {
+      console.error('❌ 로컬 기록 삭제 실패:', error);
+    }
+  };
+
 
   // 현재 로그인된 사용자 정보 가져오기
   useEffect(() => {
@@ -150,6 +169,7 @@ export default function JournalScreen() {
             <SavedRecords
               records={records}
               onRecordSelect={setModalRecord}
+              onRecordDelete={handleRecordDelete}
             />
           </>
         )}
