@@ -22,8 +22,8 @@ const Button: React.FC<ButtonProps> = ({ count }) => {
         <Text style={styles.leftTopContainer}>{currentDate}</Text>
         <Text style={styles.leftBottomContainer}>
           {count === 0 ? "오늘 기록을 작성해주세요!" : 
-           count === 1 ? "오늘도 기록을 작성해보세요!" : 
-           "오늘도 계속 기록해보세요!"}
+           count === 1 ? "오늘 1개의 기록이 있네요!" : 
+           `오늘 ${count}개의 기록이 있네요!`}
         </Text>
       </View>
       <Text style={styles.rightContainer}>{count} 회</Text>

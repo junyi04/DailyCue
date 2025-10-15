@@ -61,8 +61,11 @@ const Step3 = () => {
     }
 
     Alert.alert("완료", "프로필이 저장되었습니다!");
+    
+    // 홈 화면으로 이동
     router.replace("/main");
   };
+
 
   return (
     <SafeAreaView style={styles.container}>

@@ -1,7 +1,6 @@
 import ChooseEmoji from "@/components/main_screen/journal/record/ChooseEmoji";
 import WriteEmotion from "@/components/main_screen/journal/record/WriteEmotion";
 import { COLORS, SIZES } from "@/constants/theme";
-import { useRecords } from "@/hooks/useRecords";
 import { Record } from "@/types";
 import { recordApiService, RecordData } from "@/services/recordApiService";
 import { supabase } from "@/lib/supabase";
@@ -10,6 +9,7 @@ import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
 import { format } from "date-fns";
 import { useState, useEffect } from "react";
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -23,7 +23,6 @@ import {
 } from "react-native";
 
 export default function RecordScreen() {
-  const { addRecord } = useRecords();
   const params = useLocalSearchParams();
   
   // URL 파라미터에서 선택된 날짜 가져오기 (기본값: 오늘)
@@ -86,15 +85,13 @@ export default function RecordScreen() {
       console.log('📥 응답 받음:', response);
       
       if (response.success) {
-        // 로컬 스토리지에도 저장 (기존 기능 유지)
-        const newRecord: Record = {
-          id: Date.now().toString(),
-          emoji,
-          title,
-          content,
-          createdAt: selectedDate.toISOString(),
-        };
-        addRecord(newRecord);
+        // 백엔드 동기화 필요 플래그 설정 (홈 화면에서 백엔드에서 다시 가져오도록)
+        try {
+          await AsyncStorage.setItem('@needsBackendSync', 'true');
+          console.log('✅ 백엔드 동기화 플래그 설정 완료');
+        } catch (storageError) {
+          console.error('❌ 플래그 설정 실패:', storageError);
+        }
         
         alert("기록이 저장되었습니다!");
         router.push("/main");

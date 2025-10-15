@@ -4,7 +4,7 @@ import { COLORS, FONTS } from "@/constants/theme";
 import { format } from "date-fns";
 import { ko } from "date-fns/locale";
 import { router } from "expo-router";
-import React from "react";
+import React, { useState } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface WeekViewProps {
@@ -17,15 +17,28 @@ interface WeekViewProps {
 const WeekView: React.FC<WeekViewProps> = React.memo(
   ({ days, selectedDate, onSelectDate, containerWidth }) => {
     const dayWidth = containerWidth / 7;
+    const [lastTap, setLastTap] = useState<number | null>(null);
 
     const handleDatePress = (day: Date) => {
-      // 선택된 날짜 업데이트
-      onSelectDate(day);
-      // 기록 화면으로 이동 (선택된 날짜를 파라미터로 전달)
-      router.push({
-        pathname: "/main/record",
-        params: { date: day.toISOString() }
-      });
+      const now = Date.now();
+      const DOUBLE_PRESS_DELAY = 300; // 더블클릭 감지 시간
+
+      if (lastTap && (now - lastTap) < DOUBLE_PRESS_DELAY) {
+        // 더블클릭: 기록 작성 화면으로 이동
+        const recordDate = format(day, 'yyyy-MM-dd');
+        router.push(`/main/record?date=${recordDate}`);
+        setLastTap(null); // 더블클릭 후 초기화
+      } else {
+        // 단일클릭: 날짜 선택만 (기록 목록 보기)
+        onSelectDate(day);
+        setLastTap(now);
+        // 더블클릭이 아닌 경우에만 초기화
+        setTimeout(() => {
+          if (lastTap === now) {
+            setLastTap(null);
+          }
+        }, DOUBLE_PRESS_DELAY);
+      }
     };
 
     return (
