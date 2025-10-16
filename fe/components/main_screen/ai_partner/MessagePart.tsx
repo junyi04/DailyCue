@@ -1,13 +1,13 @@
+import { API_BASE_URL } from '@/constants/config';
 import { SET_MESSAGE } from '@/constants/messageContents';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { API_BASE_URL } from '@/constants/config';
+import { supabase } from "@/lib/supabase";
 import { Message } from "@/types";
 import { Feather } from '@expo/vector-icons';
 import { format } from 'date-fns';
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ListRenderItem, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native";
 import { FlatList } from 'react-native-gesture-handler';
-import { supabase } from "@/lib/supabase";
 
 const MessagePart = () => {
   const [input, setInput] = useState<string>('');
