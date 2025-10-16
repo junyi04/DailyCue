@@ -95,11 +95,12 @@ export default function RecordScreen() {
             createdAt: format(selectedDate, 'yyyy-MM-dd'),
           };
           
-          // 로컬 저장소에 추가
-          const existingRecords = await AsyncStorage.getItem('@records');
+          // 로컬 저장소에 추가 (사용자별 키 사용)
+          const storageKey = `@records_${userId}`;
+          const existingRecords = await AsyncStorage.getItem(storageKey);
           const records = existingRecords ? JSON.parse(existingRecords) : [];
           records.push(newRecord);
-          await AsyncStorage.setItem('@records', JSON.stringify(records));
+          await AsyncStorage.setItem(storageKey, JSON.stringify(records));
           
           console.log('✅ 로컬에 기록 저장 완료');
         } catch (localError) {

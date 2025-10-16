@@ -2,7 +2,7 @@
 import { create } from 'zustand';
 import { recordApiService } from '@/services/recordApiService';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { STORAGE_KEY } from '@/hooks/useRecords';
+import { getStorageKey } from '@/hooks/useRecords';
 
 // 타입 정의 - 기존 types.ts의 Record 타입 사용
 import { Record } from '@/types';
@@ -15,7 +15,7 @@ interface RecordStore {
   addRecord: (record: Record) => void;
   deleteRecord: (recordId: string, userId: string) => Promise<void>;
   syncWithBackend: (userId: string, force?: boolean) => Promise<void>;
-  loadFromStorage: () => Promise<void>;
+  loadFromStorage: (userId: string) => Promise<void>;
 }
 
 export const useRecordStore = create<RecordStore>((set, get) => ({
@@ -39,7 +39,7 @@ export const useRecordStore = create<RecordStore>((set, get) => ({
     
     // 2. AsyncStorage 즉시 업데이트
     const updatedRecords = records.filter((r: Record) => r.id !== recordId);
-    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(updatedRecords)).catch(console.error);
+    AsyncStorage.setItem(getStorageKey(userId), JSON.stringify(updatedRecords)).catch(console.error);
 
     try {
       // 3. 백엔드 삭제 (백그라운드)
@@ -51,7 +51,7 @@ export const useRecordStore = create<RecordStore>((set, get) => ({
       // 4. 실패 시 롤백
       if (deletedRecord) {
         set({ records: [...get().records, deletedRecord] });
-        AsyncStorage.setItem(STORAGE_KEY, JSON.stringify([...get().records])).catch(console.error);
+        AsyncStorage.setItem(getStorageKey(userId), JSON.stringify([...get().records])).catch(console.error);
       }
       
       throw error; // UI에 에러 전달
@@ -89,7 +89,7 @@ export const useRecordStore = create<RecordStore>((set, get) => ({
       });
       
       // 2. 로컬 저장소에도 저장
-      await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(convertedRecords));
+      await AsyncStorage.setItem(getStorageKey(userId), JSON.stringify(convertedRecords));
       console.log('✅ 백엔드 동기화 완료:', convertedRecords.length);
     } catch (error) {
       console.error('❌ 백엔드 동기화 실패:', error);
@@ -99,9 +99,9 @@ export const useRecordStore = create<RecordStore>((set, get) => ({
   },
 
   // 초기 로드 (앱 시작 시 한 번만)
-  loadFromStorage: async () => {
+  loadFromStorage: async (userId: string) => {
     try {
-      const storedRecords = await AsyncStorage.getItem(STORAGE_KEY);
+      const storedRecords = await AsyncStorage.getItem(getStorageKey(userId));
       if (storedRecords) {
         const parsedRecords = JSON.parse(storedRecords);
         set({ records: parsedRecords });
@@ -181,7 +181,7 @@ export default function JournalScreen() {
 
     const initializeData = async () => {
       // 1. 먼저 로컬 데이터 즉시 로드 (사용자가 바로 볼 수 있음)
-      await loadFromStorage();
+      await loadFromStorage(userId);
       
       // 2. 백그라운드에서 백엔드 동기화 (비동기로 실행)
       try {
