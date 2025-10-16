@@ -1,47 +1,67 @@
-// 추천 글 + 게시판 컴포넌트
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { incrementView } from "@/services/postService";
+import { supabase } from "@/lib/supabaseClient"; // supabase 임포트 추가
 import { Post } from "@/types";
 import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
-
 interface CommunityPostProps {
   posts: Post[];
+  name: string | null;
 }
 
+const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
+  const [topPosts, setTopPosts] = useState<Post[]>([]);
 
-const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
-  const name = "준이";
-
-  const [viewCount, setViewCount] = useState<number>(0);
-
-  // 조회수 증가 핸들링
-  const handlePostPress = (post: Post) => {
-    incrementView(post.id);
-    
-    setViewCount(viewCount + 1);
-
-    router.push({
-      pathname: "/main/community/read_post",
-      params: { post: JSON.stringify(post) }
-    });
-  };
-
-  // 처음 화면에 보여지는 게시글의 조회수를 상태로 설정
   useEffect(() => {
-    if (posts.length > 0) {
-      setViewCount(posts[0].views);
+    // views가 가장 많은 게시글 5개를 가져오기
+    const fetchTopPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('posts_with_details')
+          .select('*')
+          .order('views', { ascending: false })
+          .limit(5);
+
+        if (error) {
+          console.error('Error fetching top posts:', error.message);
+        } else {
+          setTopPosts(data || []);
+        }
+      } catch (error) {
+        console.error('Error fetching top posts:', error);
+      }
+    };
+
+    fetchTopPosts();
+  }, []);
+
+  const handlePostPress = async (post: Post) => {
+    try {
+      // 조회수 증가
+      await supabase
+        .from('posts_with_details')
+        .update({ views: post.views + 1 })
+        .eq('id', post.id);
+
+      router.push({
+        pathname: "/main/community/read_post",
+        params: { post: JSON.stringify(post) }
+      });
+
+      // 화면에 반영을 위해 상태 업데이트
+      setTopPosts(topPosts.map(item => item.id === post.id ? { ...item, views: post.views + 1 } : item));
+    } catch (error) {
+      console.error('Error updating views:', error);
     }
-  });
+  };
 
   return (
     <View style={styles.container}>
       <Text style={styles.text}>{name}님께 추천드리는 큐픽 🔥</Text>
       <FlatList
-        data={posts}
+        data={topPosts}
         horizontal
         contentContainerStyle={{ paddingBottom: 20 }}
         keyExtractor={(item) => item.id}
@@ -59,7 +79,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
             <View style={styles.viewContainer}>
               <View style={styles.statItem}>
                 <EvilIcons name="like" size={15} />
-                {/* <Text style={styles.statText}>{post.like_count}</Text> */}
+                <Text style={styles.statText}>{post.like_count}</Text>
               </View>
               <View style={styles.statItem}>
                 <FontAwesome name="commenting-o" size={10} />
@@ -67,7 +87,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
               </View>
               <View style={styles.statItem}>
                 <Ionicons name="eye-outline" size={14} />
-                <Text style={styles.statText}>{viewCount}</Text>
+                <Text style={styles.statText}>{post.views}</Text>
               </View>
             </View>
           </TouchableOpacity>
@@ -84,7 +104,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts }) => {
       />
     </View>
   );
-}
+};
 
 const styles = StyleSheet.create({
   container: {
@@ -151,5 +171,6 @@ const styles = StyleSheet.create({
     color: COLORS.gray,
     marginLeft: 3,
   },
-})
+});
+
 export default HotIssue;
