@@ -17,13 +17,6 @@ const MessagePart = () => {
   const [userName, setUserName] = useState<string>("님");
   const flatListRef = useRef<FlatList>(null);
 
-  // 자동 스크롤 함수
-  const scrollToBottom = useCallback(() => {
-    setTimeout(() => {
-      flatListRef.current?.scrollToEnd({ animated: true });
-    }, 100);
-  }, []);
-
   // 강제 스크롤 함수 (더 확실한 스크롤)
   const forceScrollToBottom = useCallback(() => {
     setTimeout(() => {

@@ -82,11 +82,13 @@ export const useRecordStore = create<RecordStore>((set, get) => ({
         createdAt: record.date || new Date().toISOString(),
       }));
       
+      // 1. 로컬 상태 업데이트 (사용자가 바로 볼 수 있음)
       set({ 
         records: convertedRecords, 
         lastSync: Date.now() 
       });
       
+      // 2. 로컬 저장소에도 저장
       await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(convertedRecords));
       console.log('✅ 백엔드 동기화 완료:', convertedRecords.length);
     } catch (error) {
@@ -136,13 +138,18 @@ export default function JournalScreen() {
     return records.filter((record: Record) => isToday(new Date(record.createdAt))).length;
   };
 
-  // 삭제 핸들러 - 낙관적 업데이트로 즉시 반영
+  // 삭제 핸들러 - 로컬 우선 업데이트 + 백엔드 동기화
   const handleRecordDelete = async (recordId: string) => {
     if (!userId) return;
     
     try {
+      // 1. 로컬에서 즉시 삭제 (사용자가 바로 볼 수 있음)
       await deleteRecord(recordId, userId);
-      // 삭제 성공 - UI는 이미 업데이트됨
+      
+      // 2. 백그라운드에서 백엔드 동기화 (비동기로 실행)
+      syncWithBackend(userId, true); // 강제 동기화
+      
+      console.log('✅ 기록 삭제 완료 - 로컬 업데이트 + 백엔드 동기화');
     } catch (error) {
       // 롤백은 store에서 자동 처리
       alert('기록 삭제에 실패했습니다.');
@@ -173,10 +180,10 @@ export default function JournalScreen() {
     if (!userId) return;
 
     const initializeData = async () => {
-      // 1. 먼저 캐시된 데이터 즉시 로드 (깜빡임 없음)
+      // 1. 먼저 로컬 데이터 즉시 로드 (사용자가 바로 볼 수 있음)
       await loadFromStorage();
       
-      // 2. 백엔드 동기화 필요 플래그 확인
+      // 2. 백그라운드에서 백엔드 동기화 (비동기로 실행)
       try {
         const needsSync = await AsyncStorage.getItem('@needsBackendSync');
         const shouldForceSync = needsSync === 'true';
@@ -187,12 +194,12 @@ export default function JournalScreen() {
           await AsyncStorage.removeItem('@needsBackendSync'); // 플래그 제거
         } else {
           // 3. 백그라운드에서 백엔드 동기화 (5분마다만)
-          await syncWithBackend(userId);
+          syncWithBackend(userId); // await 제거 - 비동기로 실행
         }
       } catch (error) {
         console.error('❌ 동기화 플래그 확인 실패:', error);
         // 플래그 확인 실패 시에도 기본 동기화는 실행
-        await syncWithBackend(userId);
+        syncWithBackend(userId); // await 제거 - 비동기로 실행
       }
     };
 

@@ -85,7 +85,28 @@ export default function RecordScreen() {
       console.log('📥 응답 받음:', response);
       
       if (response.success) {
-        // 백엔드 동기화 필요 플래그 설정 (홈 화면에서 백엔드에서 다시 가져오도록)
+        // 1. 로컬에 즉시 저장 (사용자가 바로 볼 수 있음)
+        try {
+          const newRecord = {
+            id: response.data?.id || Date.now().toString(),
+            emoji: '😐' as const,
+            title: title,
+            content: content,
+            createdAt: format(selectedDate, 'yyyy-MM-dd'),
+          };
+          
+          // 로컬 저장소에 추가
+          const existingRecords = await AsyncStorage.getItem('@records');
+          const records = existingRecords ? JSON.parse(existingRecords) : [];
+          records.push(newRecord);
+          await AsyncStorage.setItem('@records', JSON.stringify(records));
+          
+          console.log('✅ 로컬에 기록 저장 완료');
+        } catch (localError) {
+          console.error('❌ 로컬 저장 실패:', localError);
+        }
+        
+        // 2. 백엔드 동기화 필요 플래그 설정 (다음에 홈 화면에서 백엔드 동기화)
         try {
           await AsyncStorage.setItem('@needsBackendSync', 'true');
           console.log('✅ 백엔드 동기화 플래그 설정 완료');
