@@ -25,8 +25,9 @@ export async function handleRecordRequest(req, res) {
 			});
 		}
 
-		// notes가 있으면 감정 분석
+		// notes가 있으면 감정 분석 (성능 개선을 위해 주석처리)
 		let emotion = null;
+		/*
 		if (typeof notes === 'string' && notes.trim().length > 0) {
 			try {
 				const prompt = `다음 텍스트(고민 내용)를 종합적으로 읽고, 가장 대표적인 감정 하나만 한글 단어(예: 행복, 우울, 분노, 스트레스, 불안, 평온, 보람 등)로 알려줘. 반드시 한 단어만 답해:\n"""\n${notes.trim()}\n"""`;
@@ -51,6 +52,7 @@ export async function handleRecordRequest(req, res) {
 				emotion = null;
 			}
 		}
+		*/
 
 		   const upsertData = { user_id, date, fatigue, notes, title, emotion };
 		   console.log('🛠️ Supabase upsert 데이터:', upsertData);
