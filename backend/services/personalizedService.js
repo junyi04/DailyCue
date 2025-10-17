@@ -1,18 +1,18 @@
 import { supabase } from '../config/database.js';
 import { openai } from '../config/openai.js';
 
-// 캐시 유효성 검사
-const isCacheValid = () => {
-  if (!lastUpdateTime) return false;
+// 캐시 유효성 검사 (사용자별)
+const isCacheValid = (userId) => {
+  if (!lastUpdateTime[userId]) return false;
   const now = new Date();
-  const timeSinceLastUpdate = now - lastUpdateTime;
+  const timeSinceLastUpdate = now - lastUpdateTime[userId];
   return timeSinceLastUpdate < CACHE_DURATION;
 };
 
 // 캐시 변수들
-let personalizedPostsCache = null;
-let lastUpdateTime = null;
-const CACHE_DURATION = 3 * 60 * 60 * 1000; // 3시간
+let personalizedPostsCache = {};
+let lastUpdateTime = {};
+const CACHE_DURATION = 5 * 60 * 60 * 1000; // 5시간
 
 // 사용자 행동 데이터 수집 (임시 - 실제로는 프론트엔드에서 추적)
 const collectUserBehavior = async (userId) => {
@@ -186,24 +186,20 @@ const getRecommendationReason = (userProfile, post, score) => {
   return reasons.length > 0 ? reasons.join(', ') : '일반 추천';
 };
 
-// 개인화 추천 서비스
-export const getPersonalizedPosts = async (req, res) => {
+// 개인화 추천 캐시 업데이트
+const updatePersonalizedCache = async (userId) => {
   try {
-    const { user_id = 'test_user', limit = 10, offset = 0 } = req.query;
+    console.log(`🔄 사용자 ${userId}의 개인화 추천 캐시 업데이트 시작`);
     
-    console.log(`🔍 사용자 ${user_id}의 개인화 추천 요청`);
-
     // 1. 사용자 프로필 분석
-    const userProfile = await analyzeUserProfile(user_id);
+    const userProfile = await analyzeUserProfile(userId);
     
     if (!userProfile) {
-      return res.status(500).json({ 
-        success: false, 
-        error: '사용자 프로필 분석 실패' 
-      });
+      console.error('사용자 프로필 분석 실패');
+      return null;
     }
 
-    // 2. 모든 게시글 가져오기 (posts_with_details 사용)
+    // 2. 모든 게시글 가져오기
     const { data: allPosts, error } = await supabase
       .from('posts_with_details')
       .select('*')
@@ -211,36 +207,22 @@ export const getPersonalizedPosts = async (req, res) => {
 
     if (error) {
       console.error('게시글 조회 실패:', error);
-      return res.status(500).json({ 
-        success: false, 
-        error: error.message 
-      });
+      return null;
     }
 
     if (!allPosts || allPosts.length === 0) {
-      return res.json({ 
-        success: true, 
-        data: [], 
-        total: 0,
-        userProfile: userProfile
-      });
+      personalizedPostsCache[userId] = [];
+      lastUpdateTime[userId] = new Date();
+      return [];
     }
 
     // 3. 사용자가 작성한 게시글 제외
-    const filteredPosts = allPosts.filter(post => post.user_id !== user_id);
-    
-    // 디버깅 정보
-    console.log(`🔍 필터링 정보: 전체 ${allPosts.length}개, 필터링 후 ${filteredPosts.length}개, 제외된 게시글 ${allPosts.length - filteredPosts.length}개`);
-    console.log(`👤 사용자 ID: ${user_id}`);
+    const filteredPosts = allPosts.filter(post => post.user_id !== userId);
     
     if (filteredPosts.length === 0) {
-      return res.json({ 
-        success: true, 
-        data: [], 
-        total: 0,
-        userProfile: userProfile,
-        message: '추천할 게시글이 없습니다 (본인이 작성한 게시글 제외)'
-      });
+      personalizedPostsCache[userId] = [];
+      lastUpdateTime[userId] = new Date();
+      return [];
     }
 
     // 4. AI 기반 추천 점수 계산
@@ -257,12 +239,11 @@ export const getPersonalizedPosts = async (req, res) => {
         }));
       }
     } else {
-      // 신규 사용자는 기본 점수 (조회수 + 좋아요 + 댓글 기반)
+      // 신규 사용자는 기본 점수
       postsWithScores = filteredPosts.map(post => {
-        // 조회수와 좋아요를 균형있게 고려한 점수 계산
-        const viewScore = post.views * 0.1;           // 조회수 점수
-        const likeScore = post.like_count * 5;        // 좋아요 점수 (가중치 증가)
-        const commentScore = post.comment_count * 3;  // 댓글 점수
+        const viewScore = post.views * 0.1;
+        const likeScore = post.like_count * 5;
+        const commentScore = post.comment_count * 3;
         const totalScore = viewScore + likeScore + commentScore;
         
         return {
@@ -273,36 +254,73 @@ export const getPersonalizedPosts = async (req, res) => {
       });
     }
 
-    // 4. 점수순으로 정렬
+    // 5. 점수순으로 정렬
     postsWithScores.sort((a, b) => (b.personalizedScore || 0) - (a.personalizedScore || 0));
 
-    // 5. 페이지네이션
+    // 6. 캐시에 저장
+    personalizedPostsCache[userId] = postsWithScores;
+    lastUpdateTime[userId] = new Date();
+
+    console.log(`✅ 사용자 ${userId}의 개인화 추천 캐시 업데이트 완료: ${postsWithScores.length}개 게시글`);
+    
+    return postsWithScores;
+
+  } catch (error) {
+    console.error('개인화 추천 캐시 업데이트 오류:', error);
+    return null;
+  }
+};
+
+// 개인화 추천 서비스
+export const getPersonalizedPosts = async (req, res) => {
+  try {
+    const { user_id = 'test_user', limit = 10, offset = 0 } = req.query;
+    
+    console.log(`🔍 사용자 ${user_id}의 개인화 추천 요청`);
+
+    // 캐시 확인
+    if (isCacheValid(user_id) && personalizedPostsCache[user_id]) {
+      console.log(`📦 캐시에서 사용자 ${user_id}의 개인화 추천 반환`);
+      const cachedPosts = personalizedPostsCache[user_id];
+      const paginatedPosts = cachedPosts.slice(offset, offset + parseInt(limit));
+      
+      return res.json({
+        success: true,
+        data: paginatedPosts,
+        count: paginatedPosts.length,
+        total: cachedPosts.length,
+        limit: parseInt(limit),
+        offset: parseInt(offset),
+        fromCache: true,
+        message: '캐시에서 반환됨'
+      });
+    }
+
+    // 캐시가 없거나 만료된 경우 새로 생성
+    console.log(`🔄 사용자 ${user_id}의 개인화 추천 캐시 생성/업데이트`);
+    const postsWithScores = await updatePersonalizedCache(user_id);
+    
+    if (!postsWithScores) {
+      return res.status(500).json({ 
+        success: false, 
+        error: '개인화 추천 생성 실패' 
+      });
+    }
+
+    // 페이지네이션
     const paginatedPosts = postsWithScores.slice(offset, offset + parseInt(limit));
 
     console.log(`✅ 개인화 추천 완료: ${paginatedPosts.length}개 게시글`);
-    console.log(`📊 사용자 프로필:`, {
-      preferredTags: userProfile.preferredTags,
-      activityLevel: userProfile.activityLevel,
-      isNewUser: userProfile.isNewUser
-    });
 
     res.json({
       success: true,
       data: paginatedPosts,
       count: paginatedPosts.length,
-      total: filteredPosts.length, // 필터링된 게시글 수
-      totalAll: allPosts.length,   // 전체 게시글 수
+      total: postsWithScores.length,
       limit: parseInt(limit),
       offset: parseInt(offset),
-      userProfile: {
-        preferredTags: userProfile.preferredTags,
-        preferredGenders: userProfile.preferredGenders,
-        preferredAgeRanges: userProfile.preferredAgeRanges,
-        activityLevel: userProfile.activityLevel,
-        isNewUser: userProfile.isNewUser,
-        totalActions: userProfile.totalActions
-      },
-      message: `본인이 작성한 게시글 ${allPosts.length - filteredPosts.length}개 제외됨`
+      fromCache: false,
+      message: '새로 생성됨'
     });
 
   } catch (error) {
@@ -335,6 +353,93 @@ export const getUserProfile = async (req, res) => {
 
   } catch (error) {
     console.error('사용자 프로필 조회 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+};
+
+// 개인화 추천 캐시 상태 조회
+export const getPersonalizedCacheStatus = async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    
+    if (user_id) {
+      // 특정 사용자 캐시 상태
+      const isValid = isCacheValid(user_id);
+      const lastUpdate = lastUpdateTime[user_id];
+      const cacheSize = personalizedPostsCache[user_id] ? personalizedPostsCache[user_id].length : 0;
+      
+      res.json({
+        success: true,
+        userId: user_id,
+        isValid: isValid,
+        lastUpdate: lastUpdate,
+        cacheSize: cacheSize,
+        cacheDuration: CACHE_DURATION,
+        timeUntilExpiry: isValid && lastUpdate ? 
+          CACHE_DURATION - (new Date() - lastUpdate) : 0
+      });
+    } else {
+      // 전체 캐시 상태
+      const allUsers = Object.keys(personalizedPostsCache);
+      const cacheStatus = allUsers.map(uid => ({
+        userId: uid,
+        isValid: isCacheValid(uid),
+        lastUpdate: lastUpdateTime[uid],
+        cacheSize: personalizedPostsCache[uid] ? personalizedPostsCache[uid].length : 0
+      }));
+      
+      res.json({
+        success: true,
+        totalUsers: allUsers.length,
+        cacheStatus: cacheStatus,
+        cacheDuration: CACHE_DURATION
+      });
+    }
+
+  } catch (error) {
+    console.error('캐시 상태 조회 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+};
+
+// 개인화 추천 캐시 수동 업데이트
+export const updatePersonalizedCacheManual = async (req, res) => {
+  try {
+    const { user_id } = req.query;
+    
+    if (!user_id) {
+      return res.status(400).json({
+        success: false,
+        error: 'user_id가 필요합니다'
+      });
+    }
+    
+    console.log(`🔄 사용자 ${user_id}의 개인화 추천 캐시 수동 업데이트 시작`);
+    
+    const result = await updatePersonalizedCache(user_id);
+    
+    if (!result) {
+      return res.status(500).json({
+        success: false,
+        error: '캐시 업데이트 실패'
+      });
+    }
+    
+    res.json({
+      success: true,
+      message: `사용자 ${user_id}의 개인화 추천 캐시가 업데이트되었습니다`,
+      cacheSize: result.length,
+      lastUpdate: lastUpdateTime[user_id]
+    });
+
+  } catch (error) {
+    console.error('캐시 수동 업데이트 오류:', error);
     res.status(500).json({ 
       success: false, 
       error: error.message 

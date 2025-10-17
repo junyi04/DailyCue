@@ -10,6 +10,8 @@ export interface Post {
   comment_count: number;
   created_at: string;
   timeAgo?: string; // 시간 표시용 (예: "방금 전", "5분 전")
+  personalizedScore?: number; // AI 개인화 추천 점수
+  recommendationReason?: string; // 추천 이유
 }
 
 // AI 챗봇 메시지 타입

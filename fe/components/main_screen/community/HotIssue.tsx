@@ -1,6 +1,6 @@
 // 추천 글 + 게시판 컴포넌트
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { incrementView, getNewPosts, getHotPosts } from "@/services/postService";
+import { incrementView, getNewPosts, getHotPosts, getPersonalizedPosts } from "@/services/postService";
 import { Post } from "@/types";
 import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router, Link } from "expo-router";
@@ -196,19 +196,23 @@ const styles = StyleSheet.create({
 
 // AI 추천 페이지 컴포넌트
 export const AIRecommendPage: React.FC = () => {
+  const [personalizedPosts, setPersonalizedPosts] = useState<Post[]>([]);
   const [newPosts, setNewPosts] = useState<Post[]>([]);
   const [hotPosts, setHotPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>('83152734-6697-4e81-a797-a915dfbc608a');
 
-  // 새로 올라온 컨텐츠와 핫픽 데이터 로드
+  // 개인화 추천, 새로 올라온 컨텐츠와 핫픽 데이터 로드
   useEffect(() => {
     const loadPosts = async () => {
       try {
         setLoading(true);
-        const [newPostsData, hotPostsData] = await Promise.all([
+        const [personalizedPostsData, newPostsData, hotPostsData] = await Promise.all([
+          getPersonalizedPosts(userId, 5, 0),
           getNewPosts(5, 0),
           getHotPosts(5, 0)
         ]);
+        setPersonalizedPosts(personalizedPostsData);
         setNewPosts(newPostsData);
         setHotPosts(hotPostsData);
       } catch (error) {
@@ -219,7 +223,7 @@ export const AIRecommendPage: React.FC = () => {
     };
 
     loadPosts();
-  }, []);
+  }, [userId]);
 
   // 새로 올라온 컨텐츠 카드 클릭 핸들러
   const handleNewPostPress = (post: Post) => {
@@ -239,6 +243,15 @@ export const AIRecommendPage: React.FC = () => {
     });
   };
 
+  // 개인화 추천 카드 클릭 핸들러
+  const handlePersonalizedPostPress = (post: Post) => {
+    incrementView(post.id);
+    router.push({
+      pathname: "/main/community/read_post",
+      params: { post: JSON.stringify(post) }
+    });
+  };
+
   return (
     <View style={aiRecommendStyles.container}>
       {/* 헤더 */}
@@ -251,13 +264,52 @@ export const AIRecommendPage: React.FC = () => {
         <View style={aiRecommendStyles.section}>
           <Text style={aiRecommendStyles.sectionTitle}>회원님을 위한 컨텐츠</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={aiRecommendStyles.scrollContainer}>
-            {[1, 2, 3, 4, 5].map((item) => (
-              <View key={item} style={aiRecommendStyles.card}>
+            {loading ? (
+              // 로딩 상태
+              [1, 2, 3, 4, 5].map((item) => (
+                <View key={item} style={aiRecommendStyles.card}>
+                  <View style={[aiRecommendStyles.cardImage, { backgroundColor: COLORS.lightGray }]} />
+                  <Text style={aiRecommendStyles.cardTitle}>로딩 중...</Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>잠시만 기다려주세요</Text>
+                </View>
+              ))
+            ) : personalizedPosts.length > 0 ? (
+              // 실제 데이터 표시
+              personalizedPosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={aiRecommendStyles.card}
+                  onPress={() => handlePersonalizedPostPress(post)}
+                >
+                  <View style={aiRecommendStyles.cardImage}>
+                    <Text style={aiRecommendStyles.cardImageText}>{post.tag}</Text>
+                  </View>
+                  <Text style={aiRecommendStyles.cardTitle} numberOfLines={2}>
+                    {post.title}
+                  </Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>
+                    AI 추천 ({post.personalizedScore ? Math.round(post.personalizedScore) : 0}점)
+                  </Text>
+                  <View style={aiRecommendStyles.cardStats}>
+                    <View style={aiRecommendStyles.statItem}>
+                      <Ionicons name="eye-outline" size={12} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.views}</Text>
+                    </View>
+                    <View style={aiRecommendStyles.statItem}>
+                      <FontAwesome name="commenting-o" size={10} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.comment_count}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              // 데이터가 없을 때
+              <View style={aiRecommendStyles.card}>
                 <View style={aiRecommendStyles.cardImage} />
-                <Text style={aiRecommendStyles.cardTitle}>추천 글 {item}</Text>
-                <Text style={aiRecommendStyles.cardSubtitle}>AI가 추천한 글입니다</Text>
+                <Text style={aiRecommendStyles.cardTitle}>추천할 글이 없습니다</Text>
+                <Text style={aiRecommendStyles.cardSubtitle}>더 많은 활동을 해보세요</Text>
               </View>
-            ))}
+            )}
           </ScrollView>
         </View>
 

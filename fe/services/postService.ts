@@ -123,3 +123,25 @@ export const getHotPosts = async (limit: number = 5, offset: number = 0): Promis
     return [];
   }
 };
+
+// 개인화 추천 게시글 조회
+export const getPersonalizedPosts = async (userId: string, limit: number = 5, offset: number = 0): Promise<Post[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ai-recommend/personalized?user_id=${userId}&limit=${limit}&offset=${offset}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data.data || [];
+    } else {
+      throw new Error(data.error || 'Failed to fetch personalized posts');
+    }
+  } catch (error) {
+    console.error('Error fetching personalized posts:', error);
+    return [];
+  }
+};

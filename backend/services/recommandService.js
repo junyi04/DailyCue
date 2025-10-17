@@ -5,9 +5,9 @@ let newPostsCache = null;
 let lastUpdateTime = null;
 
 // 3시간 = 3 * 60 * 60 * 1000 밀리초
-// const CACHE_DURATION = 3 * 60 * 60 * 1000;
+const CACHE_DURATION = 3 * 60 * 60 * 1000;
 // 테스트용: 30초 = 30 * 1000 밀리초
-const CACHE_DURATION = 30 * 1000;
+// const CACHE_DURATION = 30 * 1000;
 
 // 캐시가 유효한지 확인
 const isCacheValid = () => {
@@ -89,18 +89,26 @@ const updateNewPostsCacheInternal = async () => {
       return;
     }
 
-    // 정확한 시간 순서로 정렬 (밀리초 단위까지 고려)
-    const newPosts = allPosts
-      .sort((a, b) => {
-        const timeA = new Date(a.created_at).getTime();
-        const timeB = new Date(b.created_at).getTime();
-        return timeB - timeA; // 최신순 (내림차순)
-      })
-      .map(post => ({
-        ...post,
-        timeAgo: formatTimeAgo(post.created_at),
-        created_at_timestamp: new Date(post.created_at).getTime() // 정확한 시간 비교를 위한 타임스탬프
-      }));
+    // 같은 시간에 생성된 게시글들을 인기도(좋아요 + 조회수) 순으로 정렬
+    const sortedPosts = allPosts.sort((a, b) => {
+      // 먼저 created_at으로 정렬 (최신순)
+      const timeDiff = new Date(b.created_at) - new Date(a.created_at);
+      if (timeDiff !== 0) {
+        return timeDiff;
+      }
+      
+      // 같은 시간이면 인기도(좋아요 + 조회수) 순으로 정렬
+      const popularityA = (a.like_count || 0) + (a.views || 0);
+      const popularityB = (b.like_count || 0) + (b.views || 0);
+      return popularityB - popularityA;
+    });
+
+    // 이미 정렬된 데이터에 timeAgo와 타임스탬프 추가
+    const newPosts = sortedPosts.map(post => ({
+      ...post,
+      timeAgo: formatTimeAgo(post.created_at),
+      created_at_timestamp: new Date(post.created_at).getTime() // 정확한 시간 비교를 위한 타임스탬프
+    }));
     
     // 기존 캐시와 비교하여 변경사항이 있는지 확인
     let hasChanges = false;
