@@ -29,7 +29,7 @@ const PostDetail = () => {
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
   const [commentText, setCommentText] = useState('');
   const [userComments, setUserComments] = useState(COMMENTS);
-  const [viewCount, setViewCount] = useState(parsedPost ? parsedPost.view : 0);
+  const [viewCount, setViewCount] = useState<number>(parsedPost ? parsedPost.view : 0);
 
   const relativeDate = formatDistanceToNow(new Date(), { addSuffix: true });
 
@@ -41,7 +41,7 @@ const PostDetail = () => {
     if (parsedPost) {
       incrementView(parsedPost.id)
         .then(() => {
-          setViewCount(viewCount + 1); // 조회수 증가
+          setViewCount((prevCount) => prevCount + 1);
         })
         .catch(error => console.error('Error incrementing view count:', error));
     }
