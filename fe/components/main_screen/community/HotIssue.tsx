@@ -1,6 +1,6 @@
 // 추천 글 + 게시판 컴포넌트
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { incrementView } from "@/services/postService";
+import { incrementView, getNewPosts, getHotPosts } from "@/services/postService";
 import { Post } from "@/types";
 import { EvilIcons, FontAwesome, Ionicons } from "@expo/vector-icons";
 import { router, Link } from "expo-router";
@@ -196,6 +196,49 @@ const styles = StyleSheet.create({
 
 // AI 추천 페이지 컴포넌트
 export const AIRecommendPage: React.FC = () => {
+  const [newPosts, setNewPosts] = useState<Post[]>([]);
+  const [hotPosts, setHotPosts] = useState<Post[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  // 새로 올라온 컨텐츠와 핫픽 데이터 로드
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        setLoading(true);
+        const [newPostsData, hotPostsData] = await Promise.all([
+          getNewPosts(5, 0),
+          getHotPosts(5, 0)
+        ]);
+        setNewPosts(newPostsData);
+        setHotPosts(hotPostsData);
+      } catch (error) {
+        console.error('게시글 로드 실패:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
+  }, []);
+
+  // 새로 올라온 컨텐츠 카드 클릭 핸들러
+  const handleNewPostPress = (post: Post) => {
+    incrementView(post.id);
+    router.push({
+      pathname: "/main/community/read_post",
+      params: { post: JSON.stringify(post) }
+    });
+  };
+
+  // 핫픽 카드 클릭 핸들러
+  const handleHotPostPress = (post: Post) => {
+    incrementView(post.id);
+    router.push({
+      pathname: "/main/community/read_post",
+      params: { post: JSON.stringify(post) }
+    });
+  };
+
   return (
     <View style={aiRecommendStyles.container}>
       {/* 헤더 */}
@@ -222,13 +265,52 @@ export const AIRecommendPage: React.FC = () => {
         <View style={aiRecommendStyles.section}>
           <Text style={aiRecommendStyles.sectionTitle}>실시간 핫픽 🔥</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={aiRecommendStyles.scrollContainer}>
-            {[1, 2, 3, 4, 5].map((item) => (
-              <View key={item} style={aiRecommendStyles.card}>
+            {loading ? (
+              // 로딩 상태
+              [1, 2, 3, 4, 5].map((item) => (
+                <View key={item} style={aiRecommendStyles.card}>
+                  <View style={[aiRecommendStyles.cardImage, { backgroundColor: COLORS.lightGray }]} />
+                  <Text style={aiRecommendStyles.cardTitle}>로딩 중...</Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>잠시만 기다려주세요</Text>
+                </View>
+              ))
+            ) : hotPosts.length > 0 ? (
+              // 실제 데이터 표시
+              hotPosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={aiRecommendStyles.card}
+                  onPress={() => handleHotPostPress(post)}
+                >
+                  <View style={aiRecommendStyles.cardImage}>
+                    <Text style={aiRecommendStyles.cardImageText}>{post.tag}</Text>
+                  </View>
+                  <Text style={aiRecommendStyles.cardTitle} numberOfLines={2}>
+                    {post.title}
+                  </Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>
+                    조회수 {post.views} (핫픽!)
+                  </Text>
+                  <View style={aiRecommendStyles.cardStats}>
+                    <View style={aiRecommendStyles.statItem}>
+                      <Ionicons name="eye-outline" size={12} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.views}</Text>
+                    </View>
+                    <View style={aiRecommendStyles.statItem}>
+                      <FontAwesome name="commenting-o" size={10} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.comment_count}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              // 데이터가 없을 때
+              <View style={aiRecommendStyles.card}>
                 <View style={aiRecommendStyles.cardImage} />
-                <Text style={aiRecommendStyles.cardTitle}>핫픽 글 {item}</Text>
-                <Text style={aiRecommendStyles.cardSubtitle}>조회수 1,234 (↑23%)</Text>
+                <Text style={aiRecommendStyles.cardTitle}>핫픽이 없습니다</Text>
+                <Text style={aiRecommendStyles.cardSubtitle}>곧 인기 글이 올라올 예정입니다</Text>
               </View>
-            ))}
+            )}
           </ScrollView>
         </View>
 
@@ -236,13 +318,52 @@ export const AIRecommendPage: React.FC = () => {
         <View style={aiRecommendStyles.section}>
           <Text style={aiRecommendStyles.sectionTitle}>새로 올라온 컨텐츠</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} style={aiRecommendStyles.scrollContainer}>
-            {[1, 2, 3, 4, 5].map((item) => (
-              <View key={item} style={aiRecommendStyles.card}>
+            {loading ? (
+              // 로딩 상태
+              [1, 2, 3, 4, 5].map((item) => (
+                <View key={item} style={aiRecommendStyles.card}>
+                  <View style={[aiRecommendStyles.cardImage, { backgroundColor: COLORS.lightGray }]} />
+                  <Text style={aiRecommendStyles.cardTitle}>로딩 중...</Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>잠시만 기다려주세요</Text>
+                </View>
+              ))
+            ) : newPosts.length > 0 ? (
+              // 실제 데이터 표시
+              newPosts.map((post) => (
+                <TouchableOpacity
+                  key={post.id}
+                  style={aiRecommendStyles.card}
+                  onPress={() => handleNewPostPress(post)}
+                >
+                  <View style={aiRecommendStyles.cardImage}>
+                    <Text style={aiRecommendStyles.cardImageText}>{post.tag}</Text>
+                  </View>
+                  <Text style={aiRecommendStyles.cardTitle} numberOfLines={2}>
+                    {post.title}
+                  </Text>
+                  <Text style={aiRecommendStyles.cardSubtitle}>
+                    {(post as any).timeAgo || '방금 전'}
+                  </Text>
+                  <View style={aiRecommendStyles.cardStats}>
+                    <View style={aiRecommendStyles.statItem}>
+                      <Ionicons name="eye-outline" size={12} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.views}</Text>
+                    </View>
+                    <View style={aiRecommendStyles.statItem}>
+                      <FontAwesome name="commenting-o" size={10} color={COLORS.gray} />
+                      <Text style={aiRecommendStyles.statText}>{post.comment_count}</Text>
+                    </View>
+                  </View>
+                </TouchableOpacity>
+              ))
+            ) : (
+              // 데이터가 없을 때
+              <View style={aiRecommendStyles.card}>
                 <View style={aiRecommendStyles.cardImage} />
-                <Text style={aiRecommendStyles.cardTitle}>새 글 {item}</Text>
-                <Text style={aiRecommendStyles.cardSubtitle}>방금 전</Text>
+                <Text style={aiRecommendStyles.cardTitle}>새로운 글이 없습니다</Text>
+                <Text style={aiRecommendStyles.cardSubtitle}>곧 새로운 글이 올라올 예정입니다</Text>
               </View>
-            ))}
+            )}
           </ScrollView>
         </View>
       </ScrollView>
@@ -316,6 +437,28 @@ const aiRecommendStyles = StyleSheet.create({
     ...FONTS.body,
     fontSize: SIZES.small,
     color: COLORS.gray,
+  },
+  cardImageText: {
+    ...FONTS.body,
+    fontSize: SIZES.small,
+    color: COLORS.white,
+    fontWeight: 'bold',
+  },
+  cardStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: SIZES.small,
+    gap: 10,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  statText: {
+    ...FONTS.body,
+    fontSize: SIZES.small,
+    color: COLORS.gray,
+    marginLeft: 3,
   },
 });
 

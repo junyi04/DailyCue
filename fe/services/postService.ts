@@ -1,6 +1,9 @@
 import { supabase } from "@/lib/supabase";
 import { Post } from "@/types";
 
+// API 기본 URL
+const API_BASE_URL = 'https://emotions-e598.onrender.com';
+
 // 게시글 조회 증가
 export const incrementView = async (postId: string) => {
   try {
@@ -76,3 +79,47 @@ export const createPost = async (postData: Omit<Post, "id">) => {
   }
   return data;
 }
+
+// 새로 올라온 컨텐츠 조회
+export const getNewPosts = async (limit: number = 5, offset: number = 0): Promise<Post[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ai-recommend/new-posts?limit=${limit}&offset=${offset}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data.data || [];
+    } else {
+      throw new Error(data.error || 'Failed to fetch new posts');
+    }
+  } catch (error) {
+    console.error('Error fetching new posts:', error);
+    return [];
+  }
+};
+
+// 실시간 핫픽 조회
+export const getHotPosts = async (limit: number = 5, offset: number = 0): Promise<Post[]> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/api/ai-recommend/hot-posts?limit=${limit}&offset=${offset}`);
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      return data.data || [];
+    } else {
+      throw new Error(data.error || 'Failed to fetch hot posts');
+    }
+  } catch (error) {
+    console.error('Error fetching hot posts:', error);
+    return [];
+  }
+};

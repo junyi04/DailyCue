@@ -9,6 +9,7 @@ export interface Post {
   like_count: number;
   comment_count: number;
   created_at: string;
+  timeAgo?: string; // 시간 표시용 (예: "방금 전", "5분 전")
 }
 
 // AI 챗봇 메시지 타입

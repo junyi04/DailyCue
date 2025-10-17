@@ -5,9 +5,9 @@ let newPostsCache = null;
 let lastUpdateTime = null;
 
 // 3시간 = 3 * 60 * 60 * 1000 밀리초
-const CACHE_DURATION = 3 * 60 * 60 * 1000;
-// 테스트용: 20초 = 20 * 1000 밀리초
-// const CACHE_DURATION = 20 * 1000;
+// const CACHE_DURATION = 3 * 60 * 60 * 1000;
+// 테스트용: 30초 = 30 * 1000 밀리초
+const CACHE_DURATION = 30 * 1000;
 
 // 캐시가 유효한지 확인
 const isCacheValid = () => {
