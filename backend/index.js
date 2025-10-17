@@ -23,7 +23,7 @@ import { handleChatRequest, getChatHistory } from './services/chatService.js';
 import { handleRecordRequest, getRecords, deleteRecord } from './services/recordService.js';
 import { getHotPosts, updateCache, getCacheStatus } from './services/HotissueService.js';
 import { getNewPosts, updateNewPostsCache, getNewPostsCacheStatus } from './services/recommandService.js';
-import { getPersonalizedPosts, getUserProfile, getPersonalizedCacheStatus, updatePersonalizedCacheManual } from './services/personalizedService.js';
+import { getPersonalizedPosts, getUserProfile, getPersonalizedCacheStatus, updatePersonalizedCacheManual, preloadAllCaches } from './services/personalizedService.js';
 
 // Swagger import
 import { swaggerUi, specs } from './config/swagger.js';
@@ -547,6 +547,7 @@ app.get('/api/ai-recommend/hot-posts', getHotPosts);
 app.get('/api/ai-recommend/personalized', getPersonalizedPosts);
 app.get('/api/ai-recommend/personalized/cache-status', getPersonalizedCacheStatus);
 app.post('/api/ai-recommend/personalized/update-cache', updatePersonalizedCacheManual);
+app.post('/api/ai-recommend/preload-caches', preloadAllCaches);
 app.get('/api/ai-recommend/user-profile', getUserProfile);
 
 // 새로 올라온 컨텐츠 관리 API

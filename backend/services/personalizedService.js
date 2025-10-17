@@ -446,3 +446,66 @@ export const updatePersonalizedCacheManual = async (req, res) => {
     });
   }
 };
+
+// 모든 캐시 미리 생성 (앱 시작 시)
+export const preloadAllCaches = async (req, res) => {
+  try {
+    console.log('🚀 모든 캐시 미리 생성 시작...');
+    
+    // 기본 사용자 ID들 (실제로는 사용자 목록을 DB에서 가져와야 함)
+    const defaultUserIds = [
+      '83152734-6697-4e81-a797-a915dfbc608a',
+      '550e8400-e29b-41d4-a716-446655440001',
+      '550e8400-e29b-41d4-a716-446655440002'
+    ];
+    
+    const results = [];
+    
+    // 각 사용자별로 캐시 생성
+    for (const userId of defaultUserIds) {
+      try {
+        console.log(`🔄 사용자 ${userId} 캐시 생성 중...`);
+        const result = await updatePersonalizedCache(userId);
+        
+        if (result) {
+          results.push({
+            userId: userId,
+            success: true,
+            cacheSize: result.length,
+            lastUpdate: lastUpdateTime[userId]
+          });
+        } else {
+          results.push({
+            userId: userId,
+            success: false,
+            error: '캐시 생성 실패'
+          });
+        }
+      } catch (error) {
+        console.error(`사용자 ${userId} 캐시 생성 오류:`, error);
+        results.push({
+          userId: userId,
+          success: false,
+          error: error.message
+        });
+      }
+    }
+    
+    const successCount = results.filter(r => r.success).length;
+    
+    res.json({
+      success: true,
+      message: `캐시 미리 생성 완료: ${successCount}/${defaultUserIds.length}개 성공`,
+      results: results,
+      totalUsers: defaultUserIds.length,
+      successCount: successCount
+    });
+
+  } catch (error) {
+    console.error('캐시 미리 생성 오류:', error);
+    res.status(500).json({ 
+      success: false, 
+      error: error.message 
+    });
+  }
+};

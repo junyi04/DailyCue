@@ -145,3 +145,33 @@ export const getPersonalizedPosts = async (userId: string, limit: number = 5, of
     return [];
   }
 };
+
+// 캐시 미리 생성 (앱 시작 시)
+export const preloadCaches = async (): Promise<boolean> => {
+  try {
+    console.log('🚀 캐시 미리 생성 시작...');
+    const response = await fetch(`${API_BASE_URL}/api/ai-recommend/preload-caches`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+    
+    const data = await response.json();
+    
+    if (data.success) {
+      console.log('✅ 캐시 미리 생성 완료:', data.message);
+      return true;
+    } else {
+      console.error('❌ 캐시 미리 생성 실패:', data.error);
+      return false;
+    }
+  } catch (error) {
+    console.error('Error preloading caches:', error);
+    return false;
+  }
+};

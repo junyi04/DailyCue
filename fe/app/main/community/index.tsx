@@ -5,16 +5,32 @@ import SearchBox from "@/components/main_screen/community/SearchBox";
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { supabase } from '@/lib/supabaseClient';
 import { Post } from '@/types';
+import { preloadCaches } from '@/services/postService';
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useState, useEffect } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
+
+  // 앱 시작 시 캐시 미리 생성
+  useEffect(() => {
+    const initializeCaches = async () => {
+      try {
+        console.log('🚀 커뮤니티 화면 진입 - 캐시 미리 생성 시작');
+        await preloadCaches();
+        console.log('✅ 캐시 미리 생성 완료');
+      } catch (error) {
+        console.error('❌ 캐시 미리 생성 실패:', error);
+      }
+    };
+
+    initializeCaches();
+  }, []);
 
   // posts 데이터 가져오기
   useFocusEffect(
