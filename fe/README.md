@@ -22,3 +22,17 @@
 const token = await login();
 console.log("Access Token:", token.accessToken);
 console.log("ID Token:", token.idToken);
+
+
+1. AI 추천 버튼
+위치: fe/components/main_screen/community/HotIssue.tsx
+라인: 61-65번째 줄
+내용: "님께 추천드리는 큐픽 🔥" 텍스트 옆에 파란색 "AI 추천" 버튼
+2. AI 추천 페이지 컴포넌트
+위치: fe/components/main_screen/community/HotIssue.tsx
+라인: 197-204번째 줄 (AIRecommendPage 컴포넌트)
+라인: 206-217번째 줄 (aiRecommendStyles 스타일)
+내용: "AI 추천 페이지"라는 텍스트가 중앙에 있는 흰색 페이지
+3. 라우팅 파일
+위치: fe/app/main/community/ai_recommend.tsx
+내용: HotIssue에서 만든 AIRecommendPage 컴포넌트를 사용하는 라우팅 파일

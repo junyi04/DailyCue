@@ -17,7 +17,7 @@ const MessagePart = () => {
   const [userName, setUserName] = useState<string>("님");
   const flatListRef = useRef<FlatList>(null);
 
-  // 강제 스크롤 함수 (더 확실한 스크롤)
+  // 강제 스크롤 함수 
   const forceScrollToBottom = useCallback(() => {
     setTimeout(() => {
       flatListRef.current?.scrollToEnd({ animated: false });

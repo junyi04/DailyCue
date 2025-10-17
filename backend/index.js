@@ -21,6 +21,9 @@ import {
 } from './services/analysisService.js';
 import { handleChatRequest, getChatHistory } from './services/chatService.js';
 import { handleRecordRequest, getRecords, deleteRecord } from './services/recordService.js';
+import { getHotPosts, updateCache, getCacheStatus } from './services/HotissueService.js';
+import { getNewPosts, updateNewPostsCache, getNewPostsCacheStatus } from './services/recommandService.js';
+import { getPersonalizedPosts, getUserProfile } from './services/personalizedService.js';
 
 // Swagger import
 import { swaggerUi, specs } from './config/swagger.js';
@@ -434,6 +437,198 @@ app.post('/chat', handleChatRequest);
  */
 app.get('/chat/history', getChatHistory);
 
+// AI 추천 API 라우트
+/**
+ * @swagger
+ * /api/ai-recommend/new-posts:
+ *   get:
+ *     summary: 새로 올라온 컨텐츠 조회
+ *     tags: [AI 추천]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 조회할 게시글 수
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: 건너뛸 게시글 수
+ *     responses:
+ *       200:
+ *         description: 새로 올라온 컨텐츠 목록
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       id:
+ *                         type: string
+ *                       title:
+ *                         type: string
+ *                       content:
+ *                         type: string
+ *                       views:
+ *                         type: integer
+ *                       like_count:
+ *                         type: integer
+ *                       comment_count:
+ *                         type: integer
+ *                       timeAgo:
+ *                         type: string
+ *                         example: "방금 전"
+ */
+app.get('/api/ai-recommend/new-posts', getNewPosts);
+
+/**
+ * @swagger
+ * /api/ai-recommend/hot-posts:
+ *   get:
+ *     summary: 실시간 핫픽 조회
+ *     tags: [AI 추천]
+ *     parameters:
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 조회할 게시글 수
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: 건너뛸 게시글 수
+ *     responses:
+ *       200:
+ *         description: 실시간 핫픽 목록
+ */
+app.get('/api/ai-recommend/hot-posts', getHotPosts);
+
+/**
+ * @swagger
+ * /api/ai-recommend/personalized:
+ *   get:
+ *     summary: 회원님을 위한 컨텐츠 조회
+ *     tags: [AI 추천]
+ *     parameters:
+ *       - in: query
+ *         name: user_id
+ *         schema:
+ *           type: string
+ *           default: test_user
+ *         description: 사용자 ID
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 10
+ *         description: 조회할 게시글 수
+ *       - in: query
+ *         name: offset
+ *         schema:
+ *           type: integer
+ *           default: 0
+ *         description: 건너뛸 게시글 수
+ *     responses:
+ *       200:
+ *         description: 개인화 추천 컨텐츠 목록
+ */
+app.get('/api/ai-recommend/personalized', getPersonalizedPosts);
+app.get('/api/ai-recommend/user-profile', getUserProfile);
+
+// 새로 올라온 컨텐츠 관리 API
+app.post('/api/new-posts/cache/update', updateNewPostsCache);
+app.get('/api/new-posts/cache/status', getNewPostsCacheStatus);
+
+// 캐시 관리 API
+/**
+ * @swagger
+ * /api/cache/update:
+ *   post:
+ *     summary: 캐시 수동 업데이트
+ *     description: 모든 AI 추천 캐시를 수동으로 업데이트합니다 (관리자용)
+ *     tags: [Cache Management]
+ *     responses:
+ *       200:
+ *         description: 캐시 업데이트 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 lastUpdate:
+ *                   type: string
+ *                   format: date-time
+ *                 cacheStatus:
+ *                   type: object
+ *                   properties:
+ *                     hotPosts:
+ *                       type: string
+ *                     newPosts:
+ *                       type: string
+ *                     personalizedPosts:
+ *                       type: string
+ */
+app.post('/api/cache/update', updateCache);
+
+/**
+ * @swagger
+ * /api/cache/status:
+ *   get:
+ *     summary: 캐시 상태 조회
+ *     description: 현재 캐시 상태와 다음 업데이트 시간을 조회합니다
+ *     tags: [Cache Management]
+ *     responses:
+ *       200:
+ *         description: 캐시 상태 조회 성공
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 cacheStatus:
+ *                   type: object
+ *                   properties:
+ *                     lastUpdate:
+ *                       type: string
+ *                       format: date-time
+ *                     timeSinceLastUpdate:
+ *                       type: number
+ *                     isExpired:
+ *                       type: boolean
+ *                     cacheDuration:
+ *                       type: number
+ *                     nextUpdateIn:
+ *                       type: number
+ *                     dataAvailable:
+ *                       type: object
+ *                       properties:
+ *                         hotPosts:
+ *                           type: boolean
+ *                         newPosts:
+ *                           type: boolean
+ *                         personalizedPosts:
+ *                           type: boolean
+ */
+app.get('/api/cache/status', getCacheStatus);
+
 // 404 handler 
 app.use((req, res) => {
   res.status(404).json({ 
@@ -446,7 +641,14 @@ app.use((req, res) => {
       'DELETE /record/:record_id',
       'GET|POST /analyze',
       'POST /chat',
-      'GET /chat/history'
+      'GET /chat/history',
+      'GET /api/ai-recommend/new-posts',
+      'GET /api/ai-recommend/hot-posts',
+      'GET /api/ai-recommend/personalized',
+      'POST /api/new-posts/cache/update',
+      'GET /api/new-posts/cache/status',
+      'POST /api/cache/update',
+      'GET /api/cache/status'
     ]
   });
 });
