@@ -107,11 +107,11 @@ const PostDetail = () => {
               ) : (
                 <FontAwesome name="heart-o" size={20} color={COLORS.black} />
               )}
-              {/* <Text style={styles.actionText}>{parsedPost.like_count}</Text> */}
+              <Text style={styles.actionText}>{parsedPost.like_count}</Text>
           </TouchableOpacity>
           <TouchableOpacity style={styles.actionButton} onPress={() => setIsCommentModalVisible(true)}>
             <FontAwesome name="commenting-o" size={20} color={COLORS.black} />
-            {/* <Text style={styles.actionText}>{parsedPost.comment_count}</Text> */}
+            <Text style={styles.actionText}>{parsedPost.comment_count}</Text>
           </TouchableOpacity>
         </View>
       </SafeAreaView>
