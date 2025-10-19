@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabase';
 import { incrementView } from '@/services/postService';
 import { FontAwesome } from '@expo/vector-icons';
 import { useLocalSearchParams } from 'expo-router';
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Image,
   ScrollView,
@@ -31,7 +31,16 @@ function formatTimeAgo(dateString: string) {
 
 const PostDetail = () => {
   const { post } = useLocalSearchParams();
-  const parsedPost = post ? JSON.parse(post as string) : null;
+  let parsedPost: any = null;
+  if (post) {
+    try {
+      const raw = String(post);
+      parsedPost = raw.trim().length > 0 ? JSON.parse(raw) : null;
+    } catch (e) {
+      console.warn('⚠️ post 파라미터 JSON 파싱 실패, null로 대체합니다.', e);
+      parsedPost = null;
+    }
+  }
 
   const [isLiked, setIsLiked] = useState(false);
   const [isCommentModalVisible, setIsCommentModalVisible] = useState(false);
@@ -46,7 +55,7 @@ const PostDetail = () => {
     ? formatTimeAgo(parsedPost.created_at)
     : '';
 
-  if (!parsedPost) return <Text>포스트 없음</Text>;
+  const isPostValid = Boolean(parsedPost);
 
   // 🔹 사용자 닉네임 가져오기
   useEffect(() => {
@@ -66,44 +75,45 @@ const PostDetail = () => {
     fetchUserProfile();
   }, []);
 
-  // 🔹 댓글 불러오기
-  const fetchComments = async () => {
+  // 🔹 댓글 불러오기 (재사용 가능하도록 useCallback)
+  const fetchComments = useCallback(async () => {
+    if (!parsedPost?.id) return;
     const { data, error } = await supabase
       .from('comments')
       .select('*')
       .eq('post_id', parsedPost.id)
       .order('created_at', { ascending: false });
 
-    if (error) console.error('댓글 불러오기 오류:', error);
-    else {
-      // 댓글에 대해 작성자의 정보를 가져오기
-      const commentsWithAuthors = await Promise.all(
-        data.map(async (comment) => {
-          const { data: profileData, error: profileError } = await supabase
-            .from('profiles')
-            .select('nickname')
-            .eq('id', comment.user_id)
-            .single();
-
-          if (profileError || !profileData) {
-            console.error('작성자 정보 불러오기 오류:', profileError);
-          }
-
-          // 댓글 객체에 author 추가
-          return {
-            ...comment,
-            author: profileData?.nickname || '익명',
-          };
-        })
-      );
-
-      setUserComments(commentsWithAuthors);
+    if (error) {
+      console.error('댓글 불러오기 오류:', error);
+      return;
     }
-  };
+
+    const commentsWithAuthors = await Promise.all(
+      (data || []).map(async (comment) => {
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('nickname')
+          .eq('id', comment.user_id)
+          .single();
+
+        if (profileError || !profileData) {
+          console.error('작성자 정보 불러오기 오류:', profileError);
+        }
+
+        return {
+          ...comment,
+          author: profileData?.nickname || '익명',
+        };
+      })
+    );
+
+    setUserComments(commentsWithAuthors);
+  }, [parsedPost?.id]);
 
   useEffect(() => {
-    if (parsedPost?.id) fetchComments();
-  }, [parsedPost]);
+    fetchComments();
+  }, [fetchComments]);
 
   // 댓글 추가
   const handleCommentSubmit = async (commentText: string) => {
@@ -158,31 +168,37 @@ const PostDetail = () => {
         <ScrollView contentContainerStyle={styles.scrollContainer}>
           {/* 포스트 내용 */}
           <View style={styles.contentWrapper}>
-            <View style={styles.tag}>
-              <Text style={[styles.tagText, { color: tagColor }]}>{parsedPost.tag}</Text>
-            </View>
-            <Text style={styles.title}>{parsedPost.title}</Text>
+            {!isPostValid ? (
+              <Text style={styles.title}>포스트 없음</Text>
+            ) : (
+              <>
+                <View style={styles.tag}>
+                  <Text style={[styles.tagText, { color: tagColor }]}>{parsedPost.tag}</Text>
+                </View>
+                <Text style={styles.title}>{parsedPost.title}</Text>
 
-            <View style={styles.profileContainer}>
-              <Image
-                source={{ uri: `https://i.pravatar.cc/150?u=${parsedPost.user_id}` }}
-                style={styles.avatar}
-              />
-              <View>
-                <Text style={styles.authorName}>{parsedPost.author ?? '익명'}</Text>
-                <Text style={styles.postDate}>{relativeDate}</Text>
-              </View>
-            </View>
+                <View style={styles.profileContainer}>
+                  <Image
+                    source={{ uri: `https://i.pravatar.cc/150?u=${parsedPost.user_id}` }}
+                    style={styles.avatar}
+                  />
+                  <View>
+                    <Text style={styles.authorName}>{parsedPost.author ?? '익명'}</Text>
+                    <Text style={styles.postDate}>{relativeDate}</Text>
+                  </View>
+                </View>
 
-            <View style={styles.postContainer}>
-              <Text style={styles.content}>{parsedPost.content}</Text>
-            </View>
+                <View style={styles.postContainer}>
+                  <Text style={styles.content}>{parsedPost.content}</Text>
+                </View>
+              </>
+            )}
           </View>
         </ScrollView>
 
         {/* 하단 버튼 */}
         <View style={styles.actionBar}>
-          <TouchableOpacity style={styles.actionButton} onPress={handleLikePress}>
+          <TouchableOpacity style={styles.actionButton} onPress={handleLikePress} disabled={!isPostValid}>
             <FontAwesome
               name={isLiked ? 'heart' : 'heart-o'}
               size={20}
@@ -194,6 +210,7 @@ const PostDetail = () => {
           <TouchableOpacity
             style={styles.actionButton}
             onPress={() => setIsCommentModalVisible(true)}
+            disabled={!isPostValid}
           >
             <FontAwesome name="commenting-o" size={20} color={COLORS.black} />
             <Text style={styles.actionText}>{userComments.length}</Text>
@@ -202,19 +219,21 @@ const PostDetail = () => {
           {/* 조회수 표시 */}
           <View style={[styles.actionButton, { marginLeft: 'auto' }]}>
             <FontAwesome name="eye" size={20} color={COLORS.gray} />
-            <Text style={styles.actionText}>{viewCount}</Text>
+            <Text style={styles.actionText}>{isPostValid ? viewCount : 0}</Text>
           </View>
         </View>
       </SafeAreaView>
 
       {/* 댓글 모달 */}
-      <CommentModal
+      {isPostValid && (
+        <CommentModal
         visible={isCommentModalVisible}
         onClose={() => setIsCommentModalVisible(false)}
         onSubmitComment={handleCommentSubmit}
         userComments={userComments}
         currentUserName={currentUserName}
       />
+      )}
     </SafeAreaProvider>
   );
 };

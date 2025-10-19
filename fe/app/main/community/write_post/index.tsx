@@ -6,7 +6,7 @@ import { Post } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { useState } from "react";
-import { Alert, Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
+import { Keyboard, KeyboardAvoidingView, Platform, StyleSheet, Text, TouchableOpacity, TouchableWithoutFeedback, View } from "react-native";
 
 export default function WritePostScreen() {
   const router = useRouter();
@@ -38,12 +38,10 @@ export default function WritePostScreen() {
 
       if (error) throw error;
 
-      Alert.alert("게시글이 저정 완료", "게시글을 확인해보세요!");
       router.push("/main/community");
 
     } catch (err: any) {
       console.error("게시글 저장 실패:", err.message);
-      Alert.alert("게시글 저장 실패");
     }
   };
 

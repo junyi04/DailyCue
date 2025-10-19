@@ -101,7 +101,7 @@ const styles = StyleSheet.create({
     flex: 1,
     marginHorizontal: 25,
     backgroundColor: COLORS.white,
-    borderTopLeftRadius: SIZES.large,
+    borderRadius: SIZES.large,
     borderTopRightRadius: SIZES.large,
     elevation: 5,
     shadowColor: COLORS.black,
@@ -174,12 +174,13 @@ const styles = StyleSheet.create({
   },
   emptyView: { 
     paddingTop: 30, 
-    alignItems: 'center' 
+    alignItems: 'center',
+    paddingBottom: 30,
   },
   emptyText: { 
-    fontSize: 14, 
-    color: COLORS.darkGray 
+    fontSize: 14,
+    color: COLORS.darkGray,
+    paddingBottom: 30,
   },
 });
-
 export default SavedRecords;

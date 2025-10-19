@@ -1,7 +1,7 @@
 // 홈 화면
 import Button from '@/components/main_screen/journal/Button';
 import HeadScreen from '@/components/main_screen/journal/HeadScreen';
-import SavedRecords from '@/components/main_screen/journal/SavedRecords';
+import SavedRecordsComponent from '@/components/main_screen/journal/SavedRecords';
 import { emojiImages } from '@/constants/emojiMap';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { STORAGE_KEY } from '@/hooks/useRecords';
@@ -70,12 +70,18 @@ export default function JournalScreen() {
         }
 
         try {
-          // 먼저 AsyncStorage에서 빠르게 로드
+          // 먼저 AsyncStorage에서 빠르게 로드 (안전 파싱)
           const storedRecords = await AsyncStorage.getItem(STORAGE_KEY);
           if (storedRecords !== null && !hasInitialLoad) {
-            const parsedRecords = JSON.parse(storedRecords);
-            setRecords(parsedRecords);
-            console.log('📥 AsyncStorage에서 기록 로드:', parsedRecords.length);
+            try {
+              const parsedRecords = storedRecords.trim().length > 0 ? JSON.parse(storedRecords) : [];
+              setRecords(Array.isArray(parsedRecords) ? parsedRecords : []);
+              console.log('📥 AsyncStorage에서 기록 로드:', Array.isArray(parsedRecords) ? parsedRecords.length : 0);
+            } catch (e) {
+              console.warn('⚠️ AsyncStorage 기록 파싱 실패, 초기화합니다.', e);
+              setRecords([]);
+              await AsyncStorage.removeItem(STORAGE_KEY);
+            }
           }
 
           // 백엔드 동기화가 필요한지 확인
@@ -136,24 +142,30 @@ export default function JournalScreen() {
         style={StyleSheet.absoluteFill}
       />
 
-      <View style={styles.head}>
-        <HeadScreen />
-      </View>
-      <View style={styles.body}>
-        {isLoading ? (
-          <View style={styles.loadingContainer}>
-            <Text style={styles.loadingText}>기록을 불러오는 중...</Text>
-          </View>
-        ) : (
-          <>
-            <Button count={getTodayRecordCount()} />
-            <SavedRecords
-              records={records}
-              onRecordSelect={setModalRecord}
-            />
-          </>
-        )}
-      </View>
+      <ScrollView 
+        style={styles.scrollContainer}
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={styles.head}>
+          <HeadScreen />
+        </View>
+        <View style={styles.body}>
+          {isLoading ? (
+            <View style={styles.loadingContainer}>
+              <Text style={styles.loadingText}>기록을 불러오는 중...</Text>
+            </View>
+          ) : (
+            <>
+              <Button count={getTodayRecordCount()} />
+            <SavedRecordsComponent
+                records={records}
+                onRecordSelect={setModalRecord}
+              />
+            </>
+          )}
+        </View>
+      </ScrollView>
 
       {/* modalRecord가 있을 때만 Modal 띄움 */}
       <Modal
@@ -197,6 +209,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
+  scrollContainer: {
+    flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
+  },
   head: {
     height: 335,
     justifyContent: 'center',
@@ -204,6 +222,7 @@ const styles = StyleSheet.create({
   body: {
     flex: 1,
     justifyContent: 'flex-end',
+    paddingBottom: 20,
   },
   overlay: {
   flex: 1,

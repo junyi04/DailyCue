@@ -99,9 +99,9 @@ export default function Setting() {
             </>
           ) : (
             <>
-              <Text style={styles.profileTitle}>{profile?.nickname || "닉네임"}</Text>
+              <Text style={styles.profileTitle}>{profile?.nickname}</Text>
               <TouchableOpacity onPress={() => setIsEditing(true)}>
-                <Text style={styles.profileSubtitle}>내 정보 수정</Text>
+                <Text style={styles.profileSubtitle}>내 닉네임 수정</Text>
               </TouchableOpacity>
             </>
           )}

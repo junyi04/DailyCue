@@ -3,7 +3,7 @@ import ChooseTag from "@/components/main_screen/community/ChooseTag";
 import CommunityPost from "@/components/main_screen/community/CommunityPost";
 import SearchBox from "@/components/main_screen/community/SearchBox";
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
-import { supabase } from "@/lib/supabaseClient"; // supabase 임포트 추가
+import { supabase } from "@/lib/supabaseClient";
 import { Post } from "@/types";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
@@ -11,6 +11,24 @@ import { useFocusEffect, useRouter } from "expo-router";
 import React, { useCallback, useState } from 'react';
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider } from "react-native-safe-area-context";
+
+// 스켈레톤 UI 컴포넌트
+const PostSkeleton = () => (
+  <View style={styles.skeletonCard}>
+    <View style={styles.skeletonHeader}>
+      <View style={styles.skeletonAvatar} />
+      <View style={styles.skeletonHeaderText}>
+        <View style={styles.skeletonTitle} />
+        <View style={styles.skeletonSubtitle} />
+      </View>
+    </View>
+    <View style={styles.skeletonContent} />
+    <View style={styles.skeletonFooter}>
+      <View style={styles.skeletonTag} />
+      <View style={styles.skeletonStats} />
+    </View>
+  </View>
+);
 
 export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
@@ -77,12 +95,12 @@ export default function CommunityScreen() {
 
             if (commentError) {
               console.error("댓글 수 가져오기 오류:", commentError);
-              post.comment_count = 0; // 오류 발생 시 댓글 수는 0으로 설정
+              post.comment_count = 0;
             } else {
-              post.comment_count = commentData.length; // 댓글 수 갱신
+              post.comment_count = commentData.length;
             }
 
-            return post; // 댓글 수를 포함한 게시글 반환
+            return post;
           }));
 
           // 로컬 상태로 게시글 갱신
@@ -98,7 +116,7 @@ export default function CommunityScreen() {
         } catch (err: any) {
           console.error("게시글 불러오기 실패:", err.message);
         } finally {
-          setLoading(false); // 로딩 종료
+          setLoading(false);
         }
       };
 
@@ -160,11 +178,14 @@ export default function CommunityScreen() {
         <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
       )}
 
-      {/* 로딩 중 표시 */}
+      {/* 로딩 중 스켈레톤 UI 표시 */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <Text style={styles.loadingText}>최적화된 글을 가져오고 있어요..</Text>
-        </View>
+        <FlatList
+          data={[1, 2, 3, 4, 5]}
+          renderItem={() => <PostSkeleton />}
+          keyExtractor={(item) => `skeleton-${item}`}
+          contentContainerStyle={{ paddingVertical: SIZES.medium }}
+        />
       ) : (
         <FlatList
           data={posts}
@@ -227,13 +248,69 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
-  loadingContainer: {
+  // 스켈레톤 UI 스타일
+  skeletonCard: {
+    backgroundColor: COLORS.white,
+    marginHorizontal: SIZES.medium,
+    marginVertical: SIZES.small,
+    padding: SIZES.medium,
+    borderRadius: SIZES.small,
+    elevation: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.05,
+    shadowRadius: 2,
+  },
+  skeletonHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: SIZES.small,
+  },
+  skeletonAvatar: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: COLORS.lightGray,
+  },
+  skeletonHeaderText: {
+    marginLeft: SIZES.small,
     flex: 1,
-    justifyContent: 'center',
+  },
+  skeletonTitle: {
+    width: '60%',
+    height: 16,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 4,
+    marginBottom: 6,
+  },
+  skeletonSubtitle: {
+    width: '40%',
+    height: 12,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 4,
+  },
+  skeletonContent: {
+    width: '100%',
+    height: 60,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 4,
+    marginVertical: SIZES.small,
+  },
+  skeletonFooter: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
   },
-  loadingText: {
-    fontSize: 15,
-    color: COLORS.secondary,
+  skeletonTag: {
+    width: 60,
+    height: 20,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 10,
+  },
+  skeletonStats: {
+    width: 80,
+    height: 16,
+    backgroundColor: COLORS.lightGray,
+    borderRadius: 4,
   },
 });
