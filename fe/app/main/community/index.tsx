@@ -1,10 +1,10 @@
 import Board from "@/components/main_screen/community/Board";
 import ChooseTag from "@/components/main_screen/community/ChooseTag";
-import CommunityPost from '@/components/main_screen/community/CommunityPost';
+import CommunityPost from "@/components/main_screen/community/CommunityPost";
 import SearchBox from "@/components/main_screen/community/SearchBox";
-import { COLORS, FONTS, SIZES } from '@/constants/theme';
-import { supabase } from '@/lib/supabaseClient';
-import { Post } from '@/types';
+import { COLORS, FONTS, SIZES } from "@/constants/theme";
+import { supabase } from "@/lib/supabaseClient"; // supabase 임포트 추가
+import { Post } from "@/types";
 import { FontAwesome, FontAwesome6 } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
 import { useFocusEffect, useRouter } from "expo-router";
@@ -16,6 +16,7 @@ export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
+  const [viewCountMap, setViewCountMap] = useState<{ [key: string]: number }>({}); // 조회수 상태 맵
 
   const router = useRouter();
 
@@ -28,7 +29,6 @@ export default function CommunityScreen() {
 
           // 검색 모드
           if (searchKeyword.trim() !== '') {
-            console.log('🔎 검색 실행:', searchKeyword);
             const { data: searchData, error: searchError } = await supabase.rpc(
               'get_search_suggestions',
               { search_term: searchKeyword }
@@ -50,9 +50,7 @@ export default function CommunityScreen() {
             } else {
               data = [];
             }
-          } 
-          // 일반 모드 (태그별)
-          else {
+          } else {
             let query = supabase
               .from('posts_with_details')
               .select('*')
@@ -67,7 +65,16 @@ export default function CommunityScreen() {
             data = tagData || [];
           }
 
+          // 로컬 상태로 게시글 갱신
           setPosts(data);
+
+          // 조회수 상태 업데이트 (기존 데이터와 조회수 맵을 업데이트)
+          const newViewCountMap = data.reduce((acc, post) => {
+            acc[post.id] = post.views;
+            return acc;
+          }, {});
+          setViewCountMap(newViewCountMap);
+
         } catch (err: any) {
           console.error("게시글 불러오기 실패:", err.message);
         }
@@ -77,10 +84,42 @@ export default function CommunityScreen() {
     }, [activeTag, searchKeyword])
   );
 
+  // 게시글 조회수 증가 함수
+  const handlePostPress = async (post: Post) => {
+    try {
+      await supabase
+        .from("posts_with_details")
+        .update({ views: post.views + 1 })
+        .eq("id", post.id);
+
+      // 조회수 증가 후 로컬 상태에 반영
+      setViewCountMap((prevMap) => ({
+        ...prevMap,
+        [post.id]: (prevMap[post.id] || post.views) + 1,
+      }));
+
+      // 게시물 페이지로 이동
+      router.push({
+        pathname: "/main/community/read_post",
+        params: { post: JSON.stringify(post) },
+      });
+    } catch (error) {
+      console.error("Error updating views:", error);
+    }
+  };
+
+  // 상태 업데이트 함수 전달
+  const updateViewCount = (id: string, newViewCount: number) => {
+    setViewCountMap((prevMap) => ({
+      ...prevMap,
+      [id]: newViewCount,
+    }));
+  };
+
   return (
     <SafeAreaProvider style={styles.container}>
       <LinearGradient
-        colors={[COLORS.secondary, COLORS.pageBackground]} 
+        colors={[COLORS.secondary, COLORS.pageBackground]}
         locations={[0.3, 0.7]}
         style={StyleSheet.absoluteFill}
       />
@@ -102,7 +141,13 @@ export default function CommunityScreen() {
       {/* 게시글 목록 */}
       <FlatList
         data={posts}
-        renderItem={({ item }) => <CommunityPost post={item} />}
+        renderItem={({ item }) => (
+          <CommunityPost
+            post={item}
+            onPress={() => handlePostPress(item)} // 게시글 클릭 시 조회수 증가
+            updateViewCount={updateViewCount} // 상태 업데이트 함수 전달
+          />
+        )}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ paddingVertical: SIZES.medium }}
         ListHeaderComponent={
