@@ -1,15 +1,15 @@
 import ChooseEmoji from "@/components/main_screen/journal/record/ChooseEmoji";
 import WriteEmotion from "@/components/main_screen/journal/record/WriteEmotion";
 import { COLORS, SIZES } from "@/constants/theme";
-import { Record } from "@/types";
-import { recordApiService, RecordData } from "@/services/recordApiService";
 import { supabase } from "@/lib/supabase";
+import { recordApiService, RecordData } from "@/services/recordApiService";
+import { Record } from "@/types";
 import { Ionicons } from "@expo/vector-icons";
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { format } from "date-fns";
 import { LinearGradient } from "expo-linear-gradient";
 import { router, useLocalSearchParams } from "expo-router";
-import { format } from "date-fns";
-import { useState, useEffect } from "react";
-import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useEffect, useState } from "react";
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -28,7 +28,7 @@ export default function RecordScreen() {
   // URL 파라미터에서 선택된 날짜 가져오기 (기본값: 오늘)
   const selectedDate = params.date ? new Date(params.date as string) : new Date();
 
-  const [emoji, setEmoji] = useState<Record["emoji"] | null>("😆");
+  const [emoji, setEmoji] = useState<Record["emoji"] | null>('love');
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -77,6 +77,7 @@ export default function RecordScreen() {
         fatigue: 5, // 기본값 (나중에 UI에서 입력받도록 수정 가능)
         notes: content,
         title: title,
+        emotion: emoji,
       };
 
       console.log('📤 전송할 데이터:', recordData);
@@ -196,13 +197,12 @@ const styles = StyleSheet.create({
   },
   dateHeader: {
     alignItems: "center",
-    marginVertical: SIZES.medium,
-    paddingHorizontal: SIZES.large,
+    marginTop: SIZES.mega,
   },
   dateText: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: COLORS.darkGray,
+    fontSize: 15,
+    fontWeight: "500",
+    color: COLORS.pageBackground,
   },
   disabledButton: {
     opacity: 0.5,

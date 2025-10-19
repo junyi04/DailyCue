@@ -25,7 +25,7 @@ export default function WritePostScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user) return;
 
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from("posts")
         .insert([
           {

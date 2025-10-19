@@ -15,37 +15,67 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
+  const [searchKeyword, setSearchKeyword] = useState('');
 
-  // posts 데이터 가져오기
+  const router = useRouter();
+
+  // 게시글 불러오기
   useFocusEffect(
     useCallback(() => {
       const fetchPosts = async () => {
         try {
-          let query = supabase
-            .from('posts')
-            .select('*')
-            .order('created_at', { ascending: false });
-          
-          if (activeTag !== "전체") {
-            query = query.eq('tag', activeTag);
+          let data: any[] = [];
+
+          // 검색 모드
+          if (searchKeyword.trim() !== '') {
+            console.log('🔎 검색 실행:', searchKeyword);
+            const { data: searchData, error: searchError } = await supabase.rpc(
+              'get_search_suggestions',
+              { search_term: searchKeyword }
+            );
+            if (searchError) throw searchError;
+
+            // title 기준으로 posts 전체 조회
+            if (searchData && searchData.length > 0) {
+              const titles = searchData.map((item: any) => item.title);
+
+              const { data: fullPosts, error: postsError } = await supabase
+                .from('posts')
+                .select('*')
+                .in('title', titles)
+                .order('created_at', { ascending: false });
+
+              if (postsError) throw postsError;
+              data = fullPosts || [];
+            } else {
+              data = [];
+            }
+          } 
+          // 일반 모드 (태그별)
+          else {
+            let query = supabase
+              .from('posts_with_details')
+              .select('*')
+              .order('created_at', { ascending: false });
+
+            if (activeTag !== "전체") {
+              query = query.eq('tag', activeTag);
+            }
+
+            const { data: tagData, error } = await query;
+            if (error) throw error;
+            data = tagData || [];
           }
 
-          const { data, error } = await query;
-
-          if (error) throw error;
-
-          setPosts(data || []);
-          // console.log("Fetched posts:", data);
+          setPosts(data);
         } catch (err: any) {
           console.error("게시글 불러오기 실패:", err.message);
         }
       };
 
       fetchPosts();
-    }, [activeTag])
+    }, [activeTag, searchKeyword])
   );
-  
-  const router = useRouter();
 
   return (
     <SafeAreaProvider style={styles.container}>
@@ -54,25 +84,35 @@ export default function CommunityScreen() {
         locations={[0.3, 0.7]}
         style={StyleSheet.absoluteFill}
       />
+
+      {/* 상단 헤더 */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>커뮤니티</Text>
         <FontAwesome6 name="bell" size={20} />
       </View>
 
-      <SearchBox />
-      <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
+      {/* 검색창 */}
+      <SearchBox onSearch={setSearchKeyword} />
 
-      {/* 일반 게시글 */}
+      {/* 태그 선택 */}
+      {searchKeyword.trim() === '' && (
+        <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
+      )}
+
+      {/* 게시글 목록 */}
       <FlatList
         data={posts}
         renderItem={({ item }) => <CommunityPost post={item} />}
         keyExtractor={(item) => String(item.id)}
         contentContainerStyle={{ paddingVertical: SIZES.medium }}
         ListHeaderComponent={
-          <Board activeTag={activeTag} posts={posts} />
-        } 
+          searchKeyword.trim() === '' ? (
+            <Board activeTag={activeTag} posts={posts} />
+          ) : null
+        }
       />
 
+      {/* 글쓰기 버튼 */}
       <TouchableOpacity
         style={styles.post}
         onPress={() => router.push('/main/community/write_post')}
@@ -84,9 +124,7 @@ export default function CommunityScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { 
-    flex: 1, 
-  },
+  container: { flex: 1 },
   header: {
     width: '100%',
     flexDirection: 'row',

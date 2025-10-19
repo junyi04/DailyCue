@@ -1,15 +1,11 @@
 // 파란 배경 쪽의 모든 뷰를 포함
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
-import type { DrawerNavigationProp } from '@react-navigation/drawer';
-import { useNavigation } from "expo-router";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Image } from "react-native-elements";
 
 
 const HeadScreen = () => {
-  const navigation = useNavigation<DrawerNavigationProp<any>>();
-
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.header}>

@@ -6,6 +6,7 @@ export interface RecordData {
   fatigue: number;
   notes: string;
   title: string;
+  emotion: string;
 }
 
 export interface RecordResponse {
@@ -19,7 +20,7 @@ export const recordApiService = {
     try {
       console.log('🌐 API 호출 시작:', `${API_BASE_URL}/record`);
       console.log('📦 요청 데이터:', recordData);
-      
+
       const response = await fetch(`${API_BASE_URL}/record`, {
         method: 'POST',
         headers: {
@@ -50,7 +51,7 @@ export const recordApiService = {
   async getRecords(userId: string): Promise<any[]> {
     try {
       console.log('🌐 기록 조회 API 호출:', `${API_BASE_URL}/record?user_id=${userId}`);
-      
+
       const response = await fetch(`${API_BASE_URL}/record?user_id=${userId}`, {
         method: 'GET',
         headers: {

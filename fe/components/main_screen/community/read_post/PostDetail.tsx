@@ -3,7 +3,6 @@ import { getTagColor } from '@/constants/tagColor';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { incrementView } from '@/services/postService';
 import { FontAwesome } from '@expo/vector-icons';
-import { formatDistanceToNow } from 'date-fns';
 import { useLocalSearchParams } from 'expo-router';
 import React, { useEffect, useState } from 'react';
 import {
@@ -19,6 +18,19 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import CommentModal from './CommentModal';
 
 
+
+function formatTimeAgo(dateString: string) {
+  const now = new Date();
+  const date = new Date(dateString);
+  const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+  if (diff < 60) return '방금 전';
+  if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+  if (diff < 172800) return '하루 전';
+  return `${Math.floor(diff / 86400)}일 전`;
+}
+
 const PostDetail = () => {
   const { post } = useLocalSearchParams();
   console.log("Post param:", post);  
@@ -31,7 +43,9 @@ const PostDetail = () => {
   const [userComments, setUserComments] = useState(COMMENTS);
   const [viewCount, setViewCount] = useState<number>(parsedPost ? parsedPost.view : 0);
 
-  const relativeDate = formatDistanceToNow(new Date(), { addSuffix: true });
+  const relativeDate = parsedPost?.created_at
+    ? formatTimeAgo(parsedPost.created_at)
+    : '';
 
   if (!parsedPost) {
     return <Text>포스트 없음</Text>;
@@ -86,7 +100,7 @@ const PostDetail = () => {
                 style={styles.avatar}
               />
               <View>
-                <Text style={styles.authorName}>{parsedPost.user_id}</Text>
+                <Text style={styles.authorName}>{parsedPost.author}</Text>
                 <Text style={styles.postDate}>{relativeDate}</Text>
               </View>
             </View>

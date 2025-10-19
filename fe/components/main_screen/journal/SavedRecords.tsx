@@ -1,10 +1,12 @@
+import { emojiImages } from '@/constants/emojiMap';
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { Record } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import { format, isSameDay } from 'date-fns';
 import React, { useState } from 'react';
-import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Image, ScrollView, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import MonthlyCalendar from "./calendar/MonthlyCalendar";
+
 
 interface SavedRecordsProps {
   records: Record[];
@@ -40,12 +42,12 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
           onDateSelect={setSelectedDate}
         />
         <View style={styles.recordDisplayArea}>
-          <View style={styles.recordsHeader}>
+          {/* <View style={styles.recordsHeader}>
             <Text style={styles.recordsTitle}>
               {format(selectedDate, 'M월 d일')} 기록
             </Text>
             <Text style={styles.recordsCount}>{recordsForSelectedDay.length}개</Text>
-          </View>
+          </View> */}
           
           {recordsForSelectedDay.length > 0 ? (
             <View style={styles.recordsList}>
@@ -57,7 +59,11 @@ export const SavedRecords: React.FC<SavedRecordsProps> = ({ records, onRecordSel
                   activeOpacity={0.8}
                 >
                   <View style={styles.headerLeft}>
-                    <Text style={styles.recordEmoji}>{record.emoji || '😐'}</Text>
+                    <Image 
+                      source={emojiImages[record.emoji || 'soso']} 
+                      style={styles.recordEmojiImage} 
+                      resizeMode="contain"
+                    />
                     <View style={styles.recordInfo}>
                       <Text style={styles.recordTitle} numberOfLines={1}>{record.title}</Text>
                     </View>
@@ -136,7 +142,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: SIZES.small,
   },
   headerLeft: {
     flexDirection: 'row',
@@ -144,8 +149,9 @@ const styles = StyleSheet.create({
     gap: 15,
     flex: 1,
   },
-  recordEmoji: { 
-    ...FONTS.h1 
+  recordEmojiImage: { 
+    width: 35,
+    height: 35,
   },
   recordInfo: {
     flex: 1,

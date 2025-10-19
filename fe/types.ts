@@ -9,6 +9,9 @@ export interface Post {
   like_count: number;
   comment_count: number;
   created_at: string;
+  author: string;
+  author_gender: string;
+  author_age_range: string;
 }
 
 // AI 챗봇 메시지 타입
@@ -20,10 +23,12 @@ export interface Message {
 }
 
 // 기록
+export type EmojiKey = 'love' | 'happy' | 'soso' | 'weird' | 'sad' | 'angry';
+
 export interface Record {
   id: string;
-  emoji: '😍' | '😆' | '😯' | '😐' | '😭' | '😡',
+  emoji: EmojiKey;
   title: string;
   content: string;
   createdAt: string;
-} 
+}

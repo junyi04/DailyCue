@@ -16,7 +16,6 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
 
   // 조회수 증가 핸들링
   const handlePostPress = (post: Post) => {
-    // 백엔드에서 조회수 증가
     incrementView(post.id);
 
     // 조회수 증가 후 상태 업데이트
@@ -47,16 +46,16 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post }) => {
       </View>
       <Text style={styles.title}>{post.title}</Text>
       <Text style={styles.content} numberOfLines={2}>{post.content}</Text>
-      <Text style={styles.author}>by {post.user_id}</Text>
+      <Text style={styles.author}>by {post.author ?? '익명'}</Text>
       <View style={styles.viewContainer}>
         {/* 댓글 수와 좋아요 수는 임시로 주석 처리 */}
         <View style={styles.statItem}>
           <EvilIcons name="like" size={15} />
-          {/* <Text style={styles.statText}>{post.like_count}</Text> */}
+          <Text style={styles.statText}>{post.like_count}</Text>
         </View>
         <View style={styles.statItem}>
           <FontAwesome name="commenting-o" size={10} />
-          {/* <Text style={styles.statText}>{post.comment_count}</Text> */}
+          <Text style={styles.statText}>{post.comment_count}</Text>
         </View>
         <View style={styles.statItem}>
           <Ionicons name="eye-outline" size={14} />

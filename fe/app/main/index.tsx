@@ -2,18 +2,19 @@
 import Button from '@/components/main_screen/journal/Button';
 import HeadScreen from '@/components/main_screen/journal/HeadScreen';
 import SavedRecords from '@/components/main_screen/journal/SavedRecords';
+import { emojiImages } from '@/constants/emojiMap';
 import { COLORS, FONTS, SIZES } from '@/constants/theme';
 import { STORAGE_KEY } from '@/hooks/useRecords';
-import { Record } from '@/types';
-import { recordApiService } from '@/services/recordApiService';
 import { supabase } from '@/lib/supabase';
+import { recordApiService } from '@/services/recordApiService';
+import { Record } from '@/types';
 import { Ionicons } from '@expo/vector-icons';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { format, isToday } from 'date-fns';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useFocusEffect } from 'expo-router';
-import { useCallback, useState, useEffect } from "react";
-import { Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { useCallback, useEffect, useState } from "react";
+import { Image, Modal, ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 
@@ -26,7 +27,6 @@ export default function JournalScreen() {
 
   // 오늘 기록 개수 계산
   const getTodayRecordCount = () => {
-    const today = new Date();
     return records.filter(record => {
       const recordDate = new Date(record.createdAt);
       return isToday(recordDate);
@@ -92,7 +92,7 @@ export default function JournalScreen() {
               // 백엔드 데이터를 Record 타입으로 변환
               const convertedRecords: Record[] = backendRecords.map((record: any) => ({
                 id: record.id || Date.now().toString(),
-                emoji: '😐', // 기본 이모지
+                emoji: record.emotion || 'soso', // 기본 이모지
                 title: record.title || '기록',
                 content: record.notes || '',
                 createdAt: record.date || new Date().toISOString(),
@@ -176,7 +176,11 @@ export default function JournalScreen() {
                   </TouchableOpacity>
                 </View>
                 <ScrollView contentContainerStyle={styles.expandedScrollView}>
-                  <Text style={styles.expandedEmoji}>{modalRecord.emoji}</Text>
+                  <Image
+                    source={emojiImages[modalRecord.emoji ?? 'neutral']}
+                    style={styles.expandedEmojiImage}
+                    resizeMode="contain"
+                  />
                   <Text style={styles.expandedTitle}>{modalRecord.title}</Text>
                   <Text style={styles.expandedContent}>{modalRecord.content}</Text>
                 </ScrollView>
@@ -233,9 +237,10 @@ const styles = StyleSheet.create({
   expandedScrollView: {
     padding: SIZES.large, 
   },
-  expandedEmoji: { 
-    fontSize: 70, 
-    textAlign: 'center', 
+  expandedEmojiImage: {
+    width: 90,
+    height: 90,
+    alignSelf: 'center',
     marginBottom: SIZES.mega,
   },
   expandedTitle: { 
