@@ -9,15 +9,18 @@ const HeadScreen = () => {
   return (
     <View style={{ flex: 1 }}>
       <View style={styles.header}>
-        <Text style={styles.text1}>DailyCue</Text>
+        <Image
+          source={require("@/assets/images/DailyCue_garo.png")}
+          style={styles.logo}
+        />
         <TouchableOpacity style={styles.hamburger}>
           <Ionicons name="menu" size={35} color={COLORS.darkBlueGray} />
         </TouchableOpacity>
       </View>
       <View style={styles.body}>
         <View style={styles.leftBody}>
-          <Text style={[styles.text2, { lineHeight: 50 }]}>
-            데일리큐로{'\n'}기록하고{'\n'}서로 공유해요!
+          <Text style={[styles.text2, { lineHeight: 45 }]}>
+            데일리큐로{'\n'}나의 하루를{'\n'}돌아보다
           </Text>
         </View>
         <View style={styles.rightBody}>
@@ -35,15 +38,15 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     marginHorizontal: 35,
-    marginTop: 60,
-    marginBottom: 35,
+    marginTop: 50,
+    marginBottom: 30,
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  text1: {
-    fontSize: 23,
-    fontWeight: 'bold',
-    color: COLORS.darkBlueGray,
+  logo: {
+    width: 80,
+    height: 54,
+    resizeMode: "contain",
   },
   hamburger: {
     justifyContent: 'center',
@@ -60,10 +63,10 @@ const styles = StyleSheet.create({
   rightBody: {
     flex: 1,
     justifyContent: 'flex-end',
-    alignItems: 'flex-end',
+    alignItems: 'center',
   },
   text2: {
-    fontSize: 25,
+    fontSize: 22,
     color: COLORS.white,
     fontFamily: 'homeFont',
   },

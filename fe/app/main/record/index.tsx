@@ -96,7 +96,6 @@ export default function RecordScreen() {
           console.error("❌ 플래그 설정 실패:", storageError);
         }
 
-        alert("기록이 저장되었습니다!");
         router.push("/main");
       } else {
         throw new Error("서버에서 오류가 발생했습니다.");

@@ -310,6 +310,7 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.medium,
     marginTop: SIZES.small,
     marginLeft: 5,
+    maxWidth: "80%",
   },
   aiMessageContainer: {
     backgroundColor: COLORS.white,

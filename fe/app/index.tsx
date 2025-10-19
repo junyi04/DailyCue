@@ -2,7 +2,7 @@ import { COLORS } from "@/constants/theme";
 import { supabase } from "@/lib/supabase";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 
 export default function SplashScreen() {
   const [isLoading, setIsLoading] = useState(true);
@@ -65,7 +65,6 @@ export default function SplashScreen() {
           source={require("@/assets/images/DailyCue.png")}
           style={styles.logo}
         />
-        <Text style={styles.text}>DailyCue</Text>
       </View>
     );
   }
@@ -76,7 +75,6 @@ export default function SplashScreen() {
         source={require("@/assets/images/DailyCue.png")}
         style={styles.logo}
       />
-      <Text style={styles.text}>DailyCue</Text>
     </View>
   );
 }
@@ -84,16 +82,14 @@ export default function SplashScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    flexDirection: "row",
     justifyContent: "center",
     alignItems: "center",
     backgroundColor: COLORS.secondary,
   },
   logo: {
-    width: 100,
-    height: 70,
+    width: 300,
+    height: 300,
     resizeMode: "contain",
-    marginRight: 20,
   },
   text: {
     fontSize: 35,

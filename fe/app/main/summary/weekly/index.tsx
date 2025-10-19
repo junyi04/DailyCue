@@ -4,8 +4,17 @@ import { SIZES } from "@/constants/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { useRoute } from "@react-navigation/native";
 import { router } from "expo-router";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 
+// 더미 리포트 데이터
+const dummyReport = {
+  success: true,
+  report: "📊 하루 요약: 오늘은 피로도가 높았지만 아이와의 시간이 즐거웠습니다...",
+  hasData: true,
+  recordsCount: 3,
+  chatCount: 2,
+  date: "2025-01-20"
+};
 
 type RouteParams = {
   year: string;
@@ -14,17 +23,15 @@ type RouteParams = {
 
 export default function WeeklyScreen() {
   const route = useRoute();
-    const { year, month } = route.params as RouteParams;
+  const { year, month } = route.params as RouteParams;
 
   return (
     <View style={styles.container}>
       {/* 뒤로 가기 */}
       <TouchableOpacity style={styles.closeButton} onPress={() => router.back()}>
-        <Ionicons name="chevron-back" size={25} /> 
+        <Ionicons name="chevron-back" size={25} />
       </TouchableOpacity>
       <Header />
-      {/* 해당 월의 주 파일 */}
-      <Text style={styles.text}>{`${year}년 ${Number(month) + 1}월 주간 리포트`}</Text>
       {/* 해당 주간 파일들 */}
       <View style={{ alignItems: 'center', marginVertical: SIZES.large }}>
         <Files />
@@ -49,4 +56,4 @@ const styles = StyleSheet.create({
     fontWeight: 'bold',
     paddingHorizontal: 30,
   }
-})
+});
