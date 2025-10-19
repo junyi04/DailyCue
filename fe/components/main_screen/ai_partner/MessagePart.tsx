@@ -9,8 +9,17 @@ import { Feather } from "@expo/vector-icons"
 import AsyncStorage from "@react-native-async-storage/async-storage"
 import { format } from "date-fns"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { ActivityIndicator, type ListRenderItem, StyleSheet, Text, TextInput, TouchableOpacity, View } from "react-native"
-import { FlatList } from "react-native-gesture-handler"
+import {
+  ActivityIndicator,
+  FlatList,
+  Platform,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View
+} from "react-native"
+import { KeyboardAwareScrollView } from "react-native-keyboard-aware-scroll-view"
 
 const CHAT_CACHE_KEY = "chat_history_cache"
 
@@ -20,8 +29,9 @@ const MessagePart = () => {
   const [userId, setUserId] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState<boolean>(true)
   const flatListRef = useRef<FlatList>(null)
+  const scrollViewRef = useRef<KeyboardAwareScrollView>(null)
 
-  // 현재 로그인된 사용자 정보 가져오기
+  /** ✅ 현재 로그인된 사용자 정보 가져오기 */
   useEffect(() => {
     const getCurrentUser = async () => {
       try {
@@ -44,7 +54,7 @@ const MessagePart = () => {
     getCurrentUser()
   }, [])
 
-  // 캐시에서 채팅 기록 불러오기
+  /** ✅ 캐시에서 채팅 기록 불러오기 */
   const loadCachedMessages = useCallback(async () => {
     try {
       const cached = await AsyncStorage.getItem(`${CHAT_CACHE_KEY}_${userId}`)
@@ -60,7 +70,7 @@ const MessagePart = () => {
     }
   }, [userId])
 
-  // 캐시에 채팅 기록 저장하기
+  /** ✅ 캐시에 채팅 기록 저장 */
   const saveCachedMessages = useCallback(
     async (messagesToCache: Message[]) => {
       try {
@@ -72,13 +82,18 @@ const MessagePart = () => {
     [userId],
   )
 
-  // 이전 대화 기록 불러오기
+  /** ✅ 스크롤 맨 아래로 이동 */
+  const scrollToBottom = useCallback(() => {
+    setTimeout(() => {
+      flatListRef.current?.scrollToEnd({ animated: true })
+    }, 100)
+  }, [])
+
+  /** ✅ 이전 대화 기록 불러오기 */
   const fetchChatHistory = useCallback(async () => {
     if (!userId) return
 
     setIsLoading(true)
-
-    // 먼저 캐시된 메시지 로드
     const hasCached = await loadCachedMessages()
 
     try {
@@ -107,69 +122,58 @@ const MessagePart = () => {
 
         setMessages(formattedMessages)
         await saveCachedMessages(formattedMessages)
-
-        setTimeout(() => {
-          flatListRef.current?.scrollToEnd({ animated: true })
-        }, 100)
+        scrollToBottom()
       } else if (!hasCached) {
-        // 채팅 기록도 없고 캐시도 없으면 환영 메시지 표시
         setMessages(SET_MESSAGE)
       }
     } catch (error) {
       console.error("Failed to fetch chat history:", error)
-      // 네트워크 오류 시 캐시된 메시지가 없으면 환영 메시지 표시
       if (!hasCached) {
         setMessages(SET_MESSAGE)
       }
     } finally {
       setIsLoading(false)
     }
-  }, [userId, loadCachedMessages, saveCachedMessages])
+  }, [userId, loadCachedMessages, saveCachedMessages, scrollToBottom])
 
   useEffect(() => {
-    if (!userId) return
-    fetchChatHistory()
+    if (userId) fetchChatHistory()
   }, [userId, fetchChatHistory])
 
-  useEffect(() => {
-    if (messages.length > 0 && !isLoading) {
-      setTimeout(() => {
-        flatListRef.current?.scrollToEnd({ animated: true })
-      }, 100)
-    }
-  }, [messages, isLoading])
-
+  /** ✅ 메시지 전송 */
   const onSend = useCallback(async () => {
     if (!userId) {
       const errorMessage: Message = {
-        id: `login-error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+        id: `login-error-${Date.now()}`,
         text: "채팅을 사용하려면 로그인이 필요합니다.",
         user: false,
         createdAt: format(new Date(), "p"),
       }
       setMessages((prev) => [...prev, errorMessage])
+      scrollToBottom()
       return
     }
 
     if (input.trim().length > 0) {
+      const userInput = input
       const newMessage: Message = {
-        id: `new-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-        text: input,
+        id: `user-${Date.now()}`,
+        text: userInput,
         user: true,
         createdAt: format(new Date(), "p"),
       }
+
       const updatedMessages = [...messages, newMessage]
       setMessages(updatedMessages)
       setInput("")
+      scrollToBottom()
 
       try {
         const response = await fetch(`${API_BASE_URL}/chat`, {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            message: input,
+            message: userInput,
             user_id: userId,
           }),
         })
@@ -178,37 +182,35 @@ const MessagePart = () => {
 
         if (response.ok) {
           const aiResponse: Message = {
-            id: `ai-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+            id: `ai-${Date.now()}`,
             text: data.aiResponse,
             user: false,
             createdAt: format(new Date(), "p"),
           }
+
           const finalMessages = [...updatedMessages, aiResponse]
           setMessages(finalMessages)
           await saveCachedMessages(finalMessages)
+          scrollToBottom()
         } else {
-          const errorMessage: Message = {
-            id: `error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-            text: "죄송합니다. 메시지 전송 중 오류가 발생했습니다.",
-            user: false,
-            createdAt: format(new Date(), "p"),
-          }
-          setMessages((prev) => [...prev, errorMessage])
+          throw new Error("서버 오류 발생")
         }
       } catch (error) {
         console.error("Chat error:", error)
         const errorMessage: Message = {
-          id: `network-error-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+          id: `network-error-${Date.now()}`,
           text: "네트워크 오류가 발생했습니다. 잠시 후 다시 시도해주세요.",
           user: false,
           createdAt: format(new Date(), "p"),
         }
         setMessages((prev) => [...prev, errorMessage])
+        scrollToBottom()
       }
     }
-  }, [input, userId, messages, saveCachedMessages])
+  }, [input, userId, messages, saveCachedMessages, scrollToBottom])
 
-  const renderItem: ListRenderItem<Message> = ({ item }) => (
+  /** ✅ 메시지 렌더링 */
+  const renderItem = ({ item }: { item: Message }) => (
     <View>
       {item.user ? (
         <View style={styles.user}>
@@ -244,11 +246,17 @@ const MessagePart = () => {
         data={messages}
         renderItem={renderItem}
         keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: SIZES.medium, flexGrow: 1, justifyContent: "flex-end" }}
-        style={{ flex: 1 }}
-        inverted={false}
-        onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+        contentContainerStyle={{
+          padding: SIZES.medium,
+          flexGrow: 1,
+          justifyContent: "flex-end",
+        }}
+        keyboardShouldPersistTaps="handled"
+        onContentSizeChange={scrollToBottom}
+        onLayout={scrollToBottom}
       />
+
+      {/* ✅ 입력창 */}
       <View style={styles.inputContainer}>
         <TextInput
           style={styles.textInput}
@@ -257,6 +265,7 @@ const MessagePart = () => {
           multiline
           placeholder="메시지 입력"
           placeholderTextColor={COLORS.darkBlueGray}
+          onFocus={scrollToBottom}
         />
         <TouchableOpacity style={styles.sendButton} onPress={onSend}>
           <Feather name="send" size={20} color={COLORS.white} />
@@ -301,7 +310,6 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.medium,
     marginTop: SIZES.small,
     marginLeft: 5,
-    flexShrink: 1,
   },
   aiMessageContainer: {
     backgroundColor: COLORS.white,
@@ -313,7 +321,6 @@ const styles = StyleSheet.create({
     borderRadius: SIZES.medium,
     marginTop: SIZES.small,
     marginRight: 5,
-    flexShrink: 1,
   },
   userMessageText: {
     ...FONTS.body,
@@ -327,8 +334,9 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     paddingHorizontal: SIZES.small,
     alignItems: "flex-end",
-    paddingBottom: 35,
+    paddingBottom: Platform.OS === "ios" ? 25 : 35,
     paddingTop: 10,
+    backgroundColor: COLORS.pageBackground,
   },
   textInput: {
     flex: 1,

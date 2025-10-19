@@ -3,7 +3,7 @@ import { supabase } from "@/lib/supabase";
 import { login } from "@react-native-seoul/kakao-login";
 import { router } from "expo-router";
 import { useState } from "react";
-import { ActivityIndicator, Alert, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ActivityIndicator, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 
 export default function LoginScreen() {
@@ -34,7 +34,6 @@ export default function LoginScreen() {
 
       if (!res.ok) {
         console.error("로그인 실패:", session);
-        Alert.alert("로그인 실패", session.error || "서버 오류");
         return;
       }
 
@@ -47,14 +46,12 @@ export default function LoginScreen() {
 
         if (error) {
           console.error("세션 설정 실패:", error);
-          Alert.alert("로그인 실패", error.message);
           return;
         }
 
         console.log("✅ 세션 등록 완료:", data.session);
       } else {
         console.error("세션 토큰이 없습니다:", session);
-        Alert.alert("로그인 실패", "세션 토큰을 받지 못했습니다.");
         return;
       }
 
@@ -63,7 +60,6 @@ export default function LoginScreen() {
 
     } catch (err: any) {
       console.error("카카오 로그인 에러:", err);
-      Alert.alert("로그인 실패", err.message);
     } finally {
       setIsLoading(false);
     }

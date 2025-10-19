@@ -1,6 +1,12 @@
 import MessagePart from "@/components/main_screen/ai_partner/MessagePart"
 import { COLORS, FONTS, SIZES } from "@/constants/theme"
-import { KeyboardAvoidingView, Platform, StyleSheet, Text, View } from "react-native"
+import {
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native"
 import { GestureHandlerRootView } from "react-native-gesture-handler"
 import { SafeAreaView } from "react-native-safe-area-context"
 
@@ -11,10 +17,11 @@ export default function AiPartnerScreen() {
         <View style={styles.header}>
           <Text style={styles.headerTitle}>Daily 챗</Text>
         </View>
+
         <KeyboardAvoidingView
           style={{ flex: 1 }}
           behavior={Platform.OS === "ios" ? "padding" : "height"}
-          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 20}
+          keyboardVerticalOffset={Platform.OS === "ios" ? 0 : 0}
         >
           <MessagePart />
         </KeyboardAvoidingView>

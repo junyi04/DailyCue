@@ -16,6 +16,7 @@ export default {
     android: {
       package: "com.junyi04.dailycue",
       edgeToEdgeEnabled: true,
+      softwareKeyboardLayoutMode: "resize",
       intentFilters: [
         {
           action: "VIEW",
