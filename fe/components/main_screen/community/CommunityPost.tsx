@@ -19,18 +19,15 @@ const CommunityPost: React.FC<CommunityPostProps> = ({ post, onPress, updateView
 
   const handlePostPress = async () => {
     try {
-      // 서버에 조회수 증가
       const newViewCount = viewCount + 1;
       await supabase
         .from("posts_with_details")
         .update({ views: newViewCount })
         .eq("id", post.id);
 
-      // 로컬 상태 반영
       setViewCount(newViewCount);
-      updateViewCount(post.id, newViewCount); // 부모 컴포넌트 상태 동기화
+      updateViewCount(post.id, newViewCount);
 
-      // 게시물 페이지로 이동
       router.push({
         pathname: "/main/community/read_post",
         params: { post: JSON.stringify({ ...post, views: newViewCount }) },

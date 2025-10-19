@@ -39,7 +39,7 @@ const PostDetail = () => {
   const [viewCount, setViewCount] = useState<number>(parsedPost ? parsedPost.views : 0);
   const [currentUserName, setCurrentUserName] = useState('');
 
-  // ✅ 조회수 1회만 증가하도록 ref로 제어
+  // 조회수 1회만 증가하도록 ref로 제어
   const hasIncrementedView = useRef(false);
 
   const relativeDate = parsedPost?.created_at
@@ -75,38 +75,67 @@ const PostDetail = () => {
       .order('created_at', { ascending: false });
 
     if (error) console.error('댓글 불러오기 오류:', error);
-    else setUserComments(data || []);
+    else {
+      // 댓글에 대해 작성자의 정보를 가져오기
+      const commentsWithAuthors = await Promise.all(
+        data.map(async (comment) => {
+          const { data: profileData, error: profileError } = await supabase
+            .from('profiles')
+            .select('nickname')
+            .eq('id', comment.user_id)
+            .single();
+
+          if (profileError || !profileData) {
+            console.error('작성자 정보 불러오기 오류:', profileError);
+          }
+
+          // 댓글 객체에 author 추가
+          return {
+            ...comment,
+            author: profileData?.nickname || '익명',
+          };
+        })
+      );
+
+      setUserComments(commentsWithAuthors);
+    }
   };
 
   useEffect(() => {
     if (parsedPost?.id) fetchComments();
   }, [parsedPost]);
 
-  // 🔹 댓글 추가
+  // 댓글 추가
   const handleCommentSubmit = async (commentText: string) => {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    if (authError || !user) {
       alert('로그인이 필요합니다.');
       return;
     }
 
+    // 댓글 객체 생성
     const newComment = {
       post_id: parsedPost.id,
       user_id: user.id,
-      author: currentUserName || '익명',
       content: commentText,
     };
 
-    const { error } = await supabase.from('comments').insert([newComment]);
-    if (error) {
-      console.error('댓글 저장 오류:', error);
+    try {
+      const { data, error } = await supabase.from('comments').insert([newComment]);
+      if (error) {
+        console.error('댓글 저장 오류:', error.message);
+        alert(`댓글 저장에 실패했습니다: ${error.message}`);
+      } else {
+        console.log('댓글 저장 성공:', data);
+        await fetchComments(); // 댓글 저장 후 불러오기
+      }
+    } catch (error) {
+      console.error('댓글 저장 예외 발생:', error);
       alert('댓글 저장에 실패했습니다.');
-    } else {
-      await fetchComments();
     }
   };
 
-  // 🔹 조회수 증가 (한 번만)
+  // 조회수 증가
   useEffect(() => {
     if (parsedPost?.id && !hasIncrementedView.current) {
       hasIncrementedView.current = true;
@@ -130,9 +159,7 @@ const PostDetail = () => {
           {/* 포스트 내용 */}
           <View style={styles.contentWrapper}>
             <View style={styles.tag}>
-              <Text style={[styles.tagText, { color: tagColor }]}>
-                {parsedPost.tag}
-              </Text>
+              <Text style={[styles.tagText, { color: tagColor }]}>{parsedPost.tag}</Text>
             </View>
             <Text style={styles.title}>{parsedPost.title}</Text>
 
@@ -173,10 +200,10 @@ const PostDetail = () => {
           </TouchableOpacity>
 
           {/* 조회수 표시 */}
-          {/* <View style={[styles.actionButton, { marginLeft: 'auto' }]}>
+          <View style={[styles.actionButton, { marginLeft: 'auto' }]}>
             <FontAwesome name="eye" size={20} color={COLORS.gray} />
             <Text style={styles.actionText}>{viewCount}</Text>
-          </View> */}
+          </View>
         </View>
       </SafeAreaView>
 

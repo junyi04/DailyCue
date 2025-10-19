@@ -26,7 +26,6 @@ const CommentModal = ({
   onClose,
   onSubmitComment,
   userComments,
-  currentUserName,
 }: CommentModalProps) => {
   const [commentText, setCommentText] = useState('');
 
@@ -38,11 +37,24 @@ const CommentModal = ({
     setCommentText('');
   };
 
+  // 댓글의 시간 포맷팅 함수
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    if (diff < 172800) return '하루 전';
+    return `${Math.floor(diff / 86400)}일 전`;
+  };
+
   const CommentItem = ({ comment }: { comment: any }) => (
     <View style={styles.commentItem}>
       <Text style={styles.commentAuthor}>{comment.author}</Text>
       <Text style={styles.commentText}>{comment.content}</Text>
-      <Text style={styles.commentDate}>{comment.createdAt}</Text>
+      <Text style={styles.commentDate}>{formatTimeAgo(comment.created_at)}</Text>
     </View>
   );
 

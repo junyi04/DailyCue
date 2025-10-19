@@ -16,7 +16,8 @@ export default function CommunityScreen() {
   const [activeTag, setActiveTag] = useState<Post['tag'] | null>('전체');
   const [posts, setPosts] = useState<Post[]>([]);
   const [searchKeyword, setSearchKeyword] = useState('');
-  const [viewCountMap, setViewCountMap] = useState<{ [key: string]: number }>({}); // 조회수 상태 맵
+  const [viewCountMap, setViewCountMap] = useState<{ [key: string]: number }>({});
+  const [loading, setLoading] = useState<boolean>(false); 
 
   const router = useRouter();
 
@@ -25,6 +26,7 @@ export default function CommunityScreen() {
     useCallback(() => {
       const fetchPosts = async () => {
         try {
+          setLoading(true);
           let data: any[] = [];
 
           // 검색 모드
@@ -65,11 +67,29 @@ export default function CommunityScreen() {
             data = tagData || [];
           }
 
-          // 로컬 상태로 게시글 갱신
-          setPosts(data);
+          // 댓글 수를 포함하여 한 번에 가져오기
+          const postsWithCommentCount = await Promise.all(data.map(async (post) => {
+            // 댓글 수 계산
+            const { data: commentData, error: commentError } = await supabase
+              .from('comments')
+              .select('id')
+              .eq('post_id', post.id);
 
-          // 조회수 상태 업데이트 (기존 데이터와 조회수 맵을 업데이트)
-          const newViewCountMap = data.reduce((acc, post) => {
+            if (commentError) {
+              console.error("댓글 수 가져오기 오류:", commentError);
+              post.comment_count = 0; // 오류 발생 시 댓글 수는 0으로 설정
+            } else {
+              post.comment_count = commentData.length; // 댓글 수 갱신
+            }
+
+            return post; // 댓글 수를 포함한 게시글 반환
+          }));
+
+          // 로컬 상태로 게시글 갱신
+          setPosts(postsWithCommentCount);
+
+          // 조회수 상태 업데이트
+          const newViewCountMap = postsWithCommentCount.reduce((acc, post) => {
             acc[post.id] = post.views;
             return acc;
           }, {});
@@ -77,6 +97,8 @@ export default function CommunityScreen() {
 
         } catch (err: any) {
           console.error("게시글 불러오기 실패:", err.message);
+        } finally {
+          setLoading(false); // 로딩 종료
         }
       };
 
@@ -138,24 +160,30 @@ export default function CommunityScreen() {
         <ChooseTag activeTag={activeTag} setActiveTag={setActiveTag} />
       )}
 
-      {/* 게시글 목록 */}
-      <FlatList
-        data={posts}
-        renderItem={({ item }) => (
-          <CommunityPost
-            post={item}
-            onPress={() => handlePostPress(item)} // 게시글 클릭 시 조회수 증가
-            updateViewCount={updateViewCount} // 상태 업데이트 함수 전달
-          />
-        )}
-        keyExtractor={(item) => String(item.id)}
-        contentContainerStyle={{ paddingVertical: SIZES.medium }}
-        ListHeaderComponent={
-          searchKeyword.trim() === '' ? (
-            <Board activeTag={activeTag} posts={posts} />
-          ) : null
-        }
-      />
+      {/* 로딩 중 표시 */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <Text style={styles.loadingText}>최적화된 글을 가져오고 있어요..</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={posts}
+          renderItem={({ item }) => (
+            <CommunityPost
+              post={item}
+              onPress={() => handlePostPress(item)}
+              updateViewCount={updateViewCount}
+            />
+          )}
+          keyExtractor={(item) => String(item.id)}
+          contentContainerStyle={{ paddingVertical: SIZES.medium }}
+          ListHeaderComponent={
+            searchKeyword.trim() === '' ? (
+              <Board activeTag={activeTag} posts={posts} />
+            ) : null
+          }
+        />
+      )}
 
       {/* 글쓰기 버튼 */}
       <TouchableOpacity
@@ -198,5 +226,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    fontSize: 15,
+    color: COLORS.secondary,
   },
 });
