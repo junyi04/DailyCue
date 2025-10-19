@@ -1,6 +1,16 @@
 import { COLORS } from '@/constants/theme';
 import React, { useState } from 'react';
-import { KeyboardAvoidingView, Modal, Platform, ScrollView, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import {
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
+} from 'react-native';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 
 interface CommentModalProps {
@@ -8,39 +18,55 @@ interface CommentModalProps {
   onClose: () => void;
   onSubmitComment: (commentText: string) => void;
   userComments: any[];
+  currentUserName: string;
 }
 
-const CommentModal = ({ visible, onClose, onSubmitComment, userComments }: CommentModalProps) => {
+const CommentModal = ({
+  visible,
+  onClose,
+  onSubmitComment,
+  userComments,
+}: CommentModalProps) => {
   const [commentText, setCommentText] = useState('');
 
   const handleSubmit = () => {
-    if (commentText.trim()) {
-      onSubmitComment(commentText);
-      setCommentText('');
-    }
+    const trimmed = commentText.trim();
+    if (!trimmed) return;
+
+    onSubmitComment(trimmed);
+    setCommentText('');
+  };
+
+  // 댓글의 시간 포맷팅 함수
+  const formatTimeAgo = (dateString: string) => {
+    const now = new Date();
+    const date = new Date(dateString);
+    const diff = Math.floor((now.getTime() - date.getTime()) / 1000);
+
+    if (diff < 60) return '방금 전';
+    if (diff < 3600) return `${Math.floor(diff / 60)}분 전`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)}시간 전`;
+    if (diff < 172800) return '하루 전';
+    return `${Math.floor(diff / 86400)}일 전`;
   };
 
   const CommentItem = ({ comment }: { comment: any }) => (
     <View style={styles.commentItem}>
       <Text style={styles.commentAuthor}>{comment.author}</Text>
       <Text style={styles.commentText}>{comment.content}</Text>
-      <Text style={styles.commentDate}>{comment.createdAt}</Text>
+      <Text style={styles.commentDate}>{formatTimeAgo(comment.created_at)}</Text>
     </View>
   );
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <SafeAreaProvider>
         <SafeAreaView style={styles.modalContainer}>
           <KeyboardAvoidingView
             style={{ flex: 1 }}
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
           >
+            {/* 헤더 */}
             <View style={styles.modalHeader}>
               <TouchableOpacity onPress={onClose}>
                 <Text style={styles.modalCancelButton}>취소</Text>
@@ -51,12 +77,18 @@ const CommentModal = ({ visible, onClose, onSubmitComment, userComments }: Comme
               </TouchableOpacity>
             </View>
 
+            {/* 댓글 목록 */}
             <ScrollView style={styles.modalCommentsContainer}>
-              {userComments.map((comment) => (
-                <CommentItem key={comment.id} comment={comment} />
-              ))}
+              {userComments.length === 0 ? (
+                <Text style={styles.noCommentText}>아직 댓글이 없습니다</Text>
+              ) : (
+                userComments.map((comment) => (
+                  <CommentItem key={comment.id} comment={comment} />
+                ))
+              )}
             </ScrollView>
 
+            {/* 입력창 */}
             <View style={styles.modalInputContainer}>
               <TextInput
                 style={styles.modalCommentInput}
@@ -77,9 +109,9 @@ const CommentModal = ({ visible, onClose, onSubmitComment, userComments }: Comme
 };
 
 const styles = StyleSheet.create({
-  modalContainer: {
-    flex: 1,
-    backgroundColor: COLORS.white,
+  modalContainer: { 
+    flex: 1, 
+    backgroundColor: COLORS.white 
   },
   modalHeader: {
     flexDirection: 'row',
@@ -90,23 +122,28 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: COLORS.lightGray,
   },
-  modalCancelButton: {
-    fontSize: 16,
-    color: COLORS.gray,
+  modalCancelButton: { 
+    fontSize: 16, 
+    color: COLORS.gray 
   },
-  modalTitle: {
-    fontSize: 16,
-    fontWeight: 'bold',
-    color: '#22c55e',
+  modalTitle: { 
+    fontSize: 16, 
+    fontWeight: 'bold', 
+    color: '#22c55e' 
   },
-  modalSubmitButton: {
-    fontSize: 16,
-    color: COLORS.primary,
-    fontWeight: 'bold',
+  modalSubmitButton: { 
+    fontSize: 16, 
+    color: COLORS.primary, 
+    fontWeight: 'bold' 
   },
-  modalCommentsContainer: {
-    flex: 1,
-    backgroundColor: COLORS.white,
+  modalCommentsContainer: { 
+    flex: 1, 
+    backgroundColor: COLORS.white 
+  },
+  noCommentText: { 
+    textAlign: 'center', 
+    marginTop: 30, 
+    color: COLORS.gray 
   },
   modalInputContainer: {
     flexDirection: 'row',
@@ -115,7 +152,6 @@ const styles = StyleSheet.create({
     paddingVertical: 15,
     borderTopWidth: 1,
     borderTopColor: COLORS.lightGray,
-    backgroundColor: COLORS.white,
   },
   modalCommentInput: {
     flex: 1,
@@ -134,8 +170,6 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     paddingHorizontal: 20,
     paddingVertical: 10,
-    justifyContent: 'center',
-    alignItems: 'center',
   },
   modalSendButtonText: {
     color: COLORS.white,

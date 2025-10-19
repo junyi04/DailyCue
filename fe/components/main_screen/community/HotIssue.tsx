@@ -1,3 +1,4 @@
+// HotIssue.tsx
 import { COLORS, FONTS, SIZES } from "@/constants/theme";
 import { supabase } from "@/lib/supabaseClient"; // supabase 임포트 추가
 import { Post } from "@/types";
@@ -7,51 +8,34 @@ import React, { useEffect, useState } from "react";
 import { FlatList, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
 interface CommunityPostProps {
-  posts: Post[];
+  post: Post;
   name: string | null;
+  updateViewCount: (id: string, newViewCount: number) => void;  // 부모 컴포넌트 상태 갱신 함수
 }
 
-const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
-  const [topPosts, setTopPosts] = useState<Post[]>([]);
+const HotIssue: React.FC<{ posts: Post[]; name: string | null; updateViewCount: (id: string, newViewCount: number) => void; }> = ({ posts, name, updateViewCount }) => {
+  const [topPosts, setTopPosts] = useState<Post[]>(posts);
 
   useEffect(() => {
-    // views가 가장 많은 게시글 5개를 가져오기
-    const fetchTopPosts = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('posts_with_details')
-          .select('*')
-          .order('views', { ascending: false })
-          .limit(5);
-
-        if (error) {
-          console.error('Error fetching top posts:', error.message);
-        } else {
-          setTopPosts(data || []);
-        }
-      } catch (error) {
-        console.error('Error fetching top posts:', error);
-      }
-    };
-
-    fetchTopPosts();
-  }, []);
+    setTopPosts(posts);  // `posts` props로 받은 데이터를 `topPosts`에 설정
+  }, [posts]);
 
   const handlePostPress = async (post: Post) => {
     try {
-      // 조회수 증가
+      const newViewCount = post.views + 1;
       await supabase
-        .from('posts_with_details')
-        .update({ views: post.views + 1 })
-        .eq('id', post.id);
+        .from("posts_with_details")
+        .update({ views: newViewCount })
+        .eq("id", post.id);
 
+      // 조회수 바로 반영
+      updateViewCount(post.id, newViewCount); // 부모 컴포넌트에서 상태 갱신
+
+      // 게시물 페이지로 이동
       router.push({
         pathname: "/main/community/read_post",
-        params: { post: JSON.stringify(post) }
+        params: { post: JSON.stringify({ ...post, views: newViewCount }) },
       });
-
-      // 화면에 반영을 위해 상태 업데이트
-      setTopPosts(topPosts.map(item => item.id === post.id ? { ...item, views: post.views + 1 } : item));
     } catch (error) {
       console.error('Error updating views:', error);
     }
@@ -64,12 +48,12 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
         data={topPosts}
         horizontal
         contentContainerStyle={{ paddingBottom: 20 }}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => String(item.id)} // UUID를 처리할 수 있도록 수정
         showsHorizontalScrollIndicator={false}
         renderItem={({ item: post }) => (
           <TouchableOpacity
             style={[styles.cardContainer, { backgroundColor: COLORS.white, marginHorizontal: 5 }]}
-            onPress={() => handlePostPress(post)}
+            onPress={() => handlePostPress(post)} // handlePostPress를 각 게시글에 전달
           >
             <View style={styles.tag}>
               <Text style={[styles.tagText, { color: COLORS.gray }]}>{post.tag}</Text>
@@ -93,7 +77,7 @@ const HotIssue: React.FC<CommunityPostProps> = ({ posts, name }) => {
           </TouchableOpacity>
         )}
         ListHeaderComponent={
-          <TouchableOpacity style={[styles.cardContainer, { backgroundColor: COLORS.secondary, marginLeft: SIZES.medium, marginRight: 5, }]}>
+          <TouchableOpacity style={[styles.cardContainer, { backgroundColor: COLORS.secondary, marginLeft: SIZES.medium, marginRight: 5 }]}>
             <View style={styles.tag}>
               <Text style={[styles.tagText, { color: COLORS.white }]}>공지사항</Text>
             </View>
@@ -112,7 +96,7 @@ const styles = StyleSheet.create({
   },
   text: {
     ...FONTS.h3,
-    fontWeight: 'bold',
+    fontWeight: "bold",
     paddingHorizontal: SIZES.large,
     marginBottom: SIZES.large,
   },
@@ -122,13 +106,13 @@ const styles = StyleSheet.create({
     padding: SIZES.medium,
     borderRadius: SIZES.medium,
     elevation: 2,
-    shadowColor: '#000',
+    shadowColor: "#000",
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.05,
     shadowRadius: 2,
   },
   tag: {
-    alignSelf: 'flex-start',
+    alignSelf: "flex-start",
     borderRadius: SIZES.base,
     marginBottom: SIZES.small,
     paddingVertical: 5,
@@ -139,7 +123,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...FONTS.h3,
-    fontWeight: 'bold',
+    fontWeight: "bold",
   },
   content: {
     ...FONTS.body,
@@ -147,23 +131,23 @@ const styles = StyleSheet.create({
     marginVertical: SIZES.base,
   },
   author: {
-    position: 'absolute',
+    position: "absolute",
     ...FONTS.body,
     fontSize: SIZES.small,
     right: SIZES.large,
     bottom: SIZES.small,
   },
   viewContainer: {
-    position: 'absolute',
+    position: "absolute",
     left: SIZES.medium,
     bottom: SIZES.small,
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
     gap: 15,
   },
   statItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
+    flexDirection: "row",
+    alignItems: "center",
   },
   statText: {
     ...FONTS.body,

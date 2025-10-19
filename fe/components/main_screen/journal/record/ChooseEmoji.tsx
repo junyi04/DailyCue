@@ -1,6 +1,7 @@
+import { emojiImages } from "@/constants/emojiMap";
 import { COLORS, SIZES } from "@/constants/theme";
-import { Record } from "@/types";
-import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { EmojiKey, Record } from "@/types";
+import { Dimensions, Image, StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import Carousel from "react-native-reanimated-carousel";
 
 
@@ -14,13 +15,14 @@ interface ChooseEmojiProps {
 }
 
 const ChooseEmotion: React.FC<ChooseEmojiProps> = ({ selectedEmoji, onSelectEmoji }) => {
-  const emojis: Record['emoji'][] = ['😍', '😆', '😯', '😐', '😭', '😡'];
+  const emojis: EmojiKey[] = ['love', 'happy', 'soso', 'weird', 'sad', 'angry'];
 
-  const defaultIndex = selectedEmoji ? emojis.indexOf(selectedEmoji) : Math.floor(emojis.length / 2);
+  let defaultIndex = emojis.indexOf(selectedEmoji as EmojiKey);
+  if (defaultIndex < 0) defaultIndex = Math.floor(emojis.length / 2);
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>오늘 하루를 돌아보며..</Text>
+      <Text style={styles.title}>어떤 일이 있었나요?</Text>
 
       <Carousel
         loop={false}
@@ -30,7 +32,7 @@ const ChooseEmotion: React.FC<ChooseEmojiProps> = ({ selectedEmoji, onSelectEmoj
         defaultIndex={defaultIndex}
         scrollAnimationDuration={500}
         onSnapToItem={(index) => onSelectEmoji(emojis[index])} // 스크롤이 멈출 때 이모지를 선택
-        renderItem={({ item, index }) => {
+        renderItem={({ item }) => {
           const isActive = item === selectedEmoji;
 
           return (
@@ -40,9 +42,11 @@ const ChooseEmotion: React.FC<ChooseEmojiProps> = ({ selectedEmoji, onSelectEmoj
               onPress={() => onSelectEmoji(item)}
             >
               <View style={[styles.card, isActive && styles.cardActive]}>
-                <Text style={[styles.emojiText, !isActive && styles.emojiTextInactive]}>
-                  {item}
-                </Text>
+                <Image
+                  source={emojiImages[item]}
+                  style={[styles.emojiImage, !isActive && styles.emojiImageInactive]}
+                  resizeMode="contain"
+                />
               </View>
             </TouchableOpacity>
           );
@@ -92,11 +96,12 @@ const styles = StyleSheet.create({
     elevation: 10,
     shadowOpacity: 0.2,
   },
-  emojiText: {
-    fontSize: ITEM_WIDTH * 0.5,
+  emojiImage: {
+    width: ITEM_WIDTH * 0.8,
+    height: ITEM_WIDTH * 0.8,
   },
-  emojiTextInactive: {
-    opacity: 0.8,
+  emojiImageInactive: {
+    opacity: 0.7,
   },
 });
 
