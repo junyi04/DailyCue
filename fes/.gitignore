@@ -1,0 +1,45 @@
+# Node
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native build outputs
+android/.gradle/
+android/.cxx/
+android/.idea/
+android/app/build/
+android/build/
+ios/
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# Debug / logs
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# Env files
+.env
+.env*.local
+
+# TypeScript
+*.tsbuildinfo
+
+# Misc
+app-example/
